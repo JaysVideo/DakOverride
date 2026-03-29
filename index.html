@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Videoboard Batter Override</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #0c0e12;
+  --s1:       #12151b;
+  --s2:       #181c24;
+  --s3:       #1e232e;
+  --border:   #262d3a;
+  --border2:  #32394a;
+  --gold:     #d4a017;
+  --gold-d:   rgba(212,160,23,0.14);
+  --gold-b:   rgba(212,160,23,0.06);
+  --green:    #27a85a;
+  --green-d:  rgba(39,168,90,0.14);
+  --red:      #c94040;
+  --red-d:    rgba(201,64,64,0.12);
+  --blue:     #3d7fc4;
+  --blue-d:   rgba(61,127,196,0.14);
+  --sky:      #5ba8d9;
+  --txt:      #c8d0df;
+  --txt2:     #7a8499;
+  --txt3:     #404a5e;
+  --cond:     'Barlow Condensed', sans-serif;
+  --body:     'Barlow', sans-serif;
+}
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--txt); font-family: var(--cond); }
+body { display: flex; flex-direction: column; }
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+.topbar {
+  height: 44px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s1);
+}
+.topbar-title {
+  font-size: 15px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--txt);
+}
+.topbar-sub {
+  font-size: 12px; color: var(--txt3); letter-spacing: 0.04em;
+}
+.topbar-sep { flex: 1; }
+
+.pill {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--cond); font-size: 11px; letter-spacing: 0.06em;
+  padding: 4px 11px; border-radius: 20px;
+  border: 1px solid var(--border); color: var(--txt2); background: var(--s2);
+  transition: all 0.2s;
+}
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.pill.live   { border-color: rgba(39,168,90,0.45);  color: var(--green); background: var(--green-d); }
+.pill.active { border-color: rgba(212,160,23,0.45); color: var(--gold);  background: var(--gold-b); }
+.pill.live .dot { animation: blink 1.6s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+.layout { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 276px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--s1);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.sb { padding: 13px 14px; border-bottom: 1px solid var(--border); }
+.sb-hd {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--txt3); margin-bottom: 9px;
+}
+
+/* file controls */
+.file-row { display: flex; gap: 5px; margin-bottom: 6px; }
+.finput {
+  flex: 1; min-width: 0;
+  background: #080a0d; border: 1px solid var(--border);
+  border-radius: 3px; color: var(--txt);
+  font-family: monospace; font-size: 10px;
+  padding: 6px 9px; outline: none;
+  transition: border-color 0.15s;
+}
+.finput:focus { border-color: var(--sky); }
+.finput::placeholder { color: var(--txt3); }
+
+.btn {
+  font-family: var(--cond); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  border: none; border-radius: 3px; cursor: pointer;
+  padding: 6px 11px; flex-shrink: 0; white-space: nowrap;
+  transition: all 0.13s;
+}
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.b-blue   { background: var(--blue);  color: #fff; }
+.b-blue:not(:disabled):hover { filter: brightness(1.18); }
+.b-ghost  { background: transparent; border: 1px solid var(--border); color: var(--txt2); }
+.b-ghost:not(:disabled):hover { border-color: var(--txt2); color: var(--txt); }
+.b-gold   { background: var(--gold);  color: #000; }
+.b-gold:not(:disabled):hover { filter: brightness(1.1); }
+.b-red    { background: transparent; border: 1px solid var(--red); color: var(--red); }
+.b-red:not(:disabled):hover { background: var(--red); color: #fff; }
+.b-green  { background: var(--green); color: #fff; }
+.b-green:not(:disabled):hover { filter: brightness(1.1); }
+input[type=file] { display: none; }
+
+.btn-row { display: flex; gap: 5px; }
+.btn-row .btn { flex: 1; }
+
+/* paste area */
+.paste-area { display: none; margin-top: 7px; }
+.paste-area textarea {
+  width: 100%; height: 88px; resize: vertical;
+  background: #080a0d; border: 1px solid var(--border);
+  border-radius: 3px; color: var(--txt);
+  font-family: monospace; font-size: 10px;
+  padding: 8px; outline: none; margin-bottom: 5px;
+}
+
+/* override card */
+.ov-card {
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 11px 12px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ov-card.has-ov { border-color: rgba(212,160,23,0.5); background: var(--gold-b); }
+
+.ov-label { font-size: 9px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--txt3); margin-bottom: 4px; }
+.ov-name { font-size: 21px; font-weight: 700; line-height: 1.1; }
+.ov-name .num { color: var(--gold); margin-right: 4px; }
+.ov-name.is-ov { color: var(--gold); }
+.ov-meta { font-family: monospace; font-size: 10px; color: var(--txt2); margin-top: 3px; }
+
+.ov-arrow-row {
+  display: flex; align-items: center; gap: 6px;
+  margin: 10px 0 6px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.ov-arrow { color: var(--txt3); font-size: 12px; }
+
+/* save controls */
+.save-note {
+  font-size: 11px; color: var(--txt3); line-height: 1.55;
+  margin-bottom: 10px; font-family: var(--body);
+}
+.save-note b { color: var(--txt2); font-weight: 500; }
+.save-note code { font-family: monospace; color: var(--gold); font-size: 10px; }
+
+/* stats */
+.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 3px; }
+.stat-cell {
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 3px; padding: 5px 6px; text-align: center;
+}
+.stat-cell .v { font-size: 17px; font-weight: 700; line-height: 1; }
+.stat-cell .k { font-family: monospace; font-size: 8px; color: var(--txt3); margin-top: 2px; letter-spacing: 0.06em; }
+
+/* game stats */
+.game-stat-row { display: flex; gap: 3px; margin-bottom: 3px; }
+.game-stat-row .stat-cell { flex: 1; }
+
+/* ── MAIN ────────────────────────────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* team headers */
+.team-headers {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; background: var(--s1);
+}
+.th {
+  padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+}
+.th:first-child { border-right: 1px solid var(--border); }
+.th-id { font-size: 28px; font-weight: 700; letter-spacing: 0.05em; line-height: 1; }
+.th-id.guest { color: var(--sky); }
+.th-id.home  { color: var(--green); }
+.th-meta { flex: 1; min-width: 0; }
+.th-name   { font-size: 13px; font-weight: 500; color: var(--txt2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.th-record { font-family: monospace; font-size: 10px; color: var(--txt3); margin-top: 1px; }
+.th-badge {
+  margin-left: auto; font-family: monospace; font-size: 9px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 3px; flex-shrink: 0;
+}
+.th-badge.up   { background: var(--green-d); color: var(--green); border: 1px solid rgba(39,168,90,0.3); }
+.th-badge.down { background: var(--s2); color: var(--txt3); border: 1px solid var(--border); }
+
+/* column headers */
+.col-headers {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.col-hd {
+  display: flex; align-items: center;
+  padding: 5px 12px; gap: 0;
+  font-family: monospace; font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--txt3);
+}
+.col-hd:first-child { border-right: 1px solid var(--border); }
+.chd-spot { width: 22px; flex-shrink: 0; }
+.chd-uni  { width: 32px; flex-shrink: 0; }
+.chd-name { flex: 1; }
+.chd-pos  { width: 32px; text-align: center; flex-shrink: 0; }
+.chd-avg  { width: 38px; text-align: right; flex-shrink: 0; }
+.chd-ab   { width: 28px; text-align: right; flex-shrink: 0; }
+.chd-h    { width: 24px; text-align: right; flex-shrink: 0; }
+.chd-rbi  { width: 28px; text-align: right; flex-shrink: 0; }
+
+/* lineups */
+.lineups { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow-y: auto; }
+.lineup-col { overflow-y: auto; }
+.lineup-col:first-child { border-right: 1px solid var(--border); }
+.lineup-inner { padding: 5px; display: flex; flex-direction: column; gap: 2px; }
+
+/* batter row */
+.br {
+  display: flex; align-items: center;
+  border: 1px solid transparent; border-radius: 3px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: background 0.1s, border-color 0.1s;
+  user-select: none;
+}
+.br:hover { background: var(--s3); border-color: var(--border2); }
+.br.at-bat {
+  background: var(--green-d); border-color: rgba(39,168,90,0.3);
+}
+.br.selected {
+  background: var(--gold-d); border-color: rgba(212,160,23,0.55);
+}
+.br.at-bat.selected {
+  background: var(--gold-d); border-color: rgba(212,160,23,0.55);
+}
+
+.br-indicator {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.at-bat   .br-indicator { background: var(--green); }
+.selected .br-indicator { background: var(--gold); }
+
+.br-spot {
+  width: 22px; text-align: center; flex-shrink: 0;
+  font-family: monospace; font-size: 10px; color: var(--txt3);
+  padding: 9px 0;
+}
+.br-uni {
+  width: 32px; text-align: center; flex-shrink: 0;
+  font-family: monospace; font-size: 12px; font-weight: 500;
+  color: var(--gold);
+}
+.br-name-block { flex: 1; padding: 7px 3px; min-width: 0; }
+.br-name {
+  font-size: 16px; font-weight: 600; letter-spacing: 0.02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.br-pos  { font-family: monospace; font-size: 9px; color: var(--txt3); margin-top: 1px; }
+
+.br-stats {
+  display: flex; gap: 0; flex-shrink: 0;
+  padding-right: 8px;
+}
+.brs { width: 28px; text-align: right; padding: 0 2px; }
+.brs .sv { font-size: 13px; font-weight: 600; line-height: 1.2; }
+.brs .sk { font-family: monospace; font-size: 8px; color: var(--txt3); }
+
+.br-atbat-tag {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--green);
+  display: none;
+}
+.at-bat .br-atbat-tag { display: block; }
+
+.sub-tag {
+  font-family: monospace; font-size: 8px; letter-spacing: 0.05em;
+  padding: 1px 4px; border-radius: 2px; margin-right: 6px; flex-shrink: 0;
+  background: var(--s1); color: var(--txt3); border: 1px solid var(--border);
+}
+
+/* empty */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--txt3); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; grid-column: 1/-1; }
+
+/* ── STATUSBAR ───────────────────────────────────────────────────────────── */
+.statusbar {
+  height: 30px; flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  background: var(--s1);
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 18px;
+}
+.sb-fi { font-family: monospace; font-size: 10px; color: var(--txt3); }
+.sb-fi span { color: var(--txt2); }
+.sb-sep { flex: 1; }
+.sb-ov { font-family: monospace; font-size: 10px; color: var(--gold); display: none; }
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 44px; left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--s2); border: 1px solid var(--border2);
+  font-family: monospace; font-size: 11px;
+  padding: 8px 16px; border-radius: 3px;
+  opacity: 0; pointer-events: none;
+  transition: all 0.18s; z-index: 999;
+  white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok   { border-color: rgba(39,168,90,0.5);  color: var(--green); }
+.toast.warn { border-color: rgba(212,160,23,0.5); color: var(--gold); }
+.toast.err  { border-color: rgba(201,64,64,0.5);  color: var(--red); }
+
+/* ── IFRAME WARNING BANNER ───────────────────────────────────────────────── */
+.iframe-banner {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(12,14,18,0.96);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.iframe-banner-box {
+  background: var(--s2);
+  border: 1px solid rgba(212,160,23,0.5);
+  border-radius: 6px;
+  padding: 36px 40px;
+  max-width: 480px;
+  text-align: center;
+}
+.iframe-banner-box h2 {
+  font-size: 18px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+}
+.iframe-banner-box p {
+  font-family: var(--body); font-size: 13px; color: var(--txt2);
+  line-height: 1.65; margin-bottom: 20px;
+}
+.iframe-banner-box code {
+  font-family: monospace; font-size: 11px;
+  color: var(--gold); background: var(--s3);
+  padding: 2px 6px; border-radius: 3px;
+}
+.iframe-banner-box .open-btn {
+  display: inline-block;
+  background: var(--gold); color: #000;
+  font-family: var(--cond); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 10px 24px; border-radius: 4px;
+  cursor: pointer; border: none; text-decoration: none;
+  transition: filter 0.13s;
+}
+.iframe-banner-box .open-btn:hover { filter: brightness(1.1); }
+.iframe-banner-box .dismiss {
+  display: block; margin-top: 14px;
+  font-family: monospace; font-size: 10px; color: var(--txt3);
+  cursor: pointer; letter-spacing: 0.06em;
+}
+.iframe-banner-box .dismiss:hover { color: var(--txt2); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- IFRAME WARNING — shown when not running as top-level page -->
+<div class="iframe-banner" id="iframeBanner" style="display:none;">
+  <div class="iframe-banner-box">
+    <h2>⚠ Open as Standalone Page</h2>
+    <p>
+      This tool uses the browser's <code>File System Access API</code> to write directly to <code>test.xml</code> on disk — no download prompt, no manual copy.<br><br>
+      That API is blocked inside embedded previews. To use it, open this file directly in Chrome as its own tab.
+    </p>
+    <button class="open-btn" onclick="openSelf()">Open in New Tab</button>
+    <span class="dismiss" onclick="hideBanner()">Dismiss — I'll use the paste / download fallback instead</span>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span class="topbar-title">Batter Override</span>
+  <span class="topbar-sub">StatBroadcast → Daktronics Scoreboard Intercept</span>
+  <div class="topbar-sep"></div>
+  <div class="pill" id="pill"><div class="dot"></div><span id="pillTxt">No file loaded</span></div>
+</div>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar">
+
+    <!-- FILE LOAD -->
+    <div class="sb">
+      <div class="sb-hd">Source — test.xml</div>
+      <div class="file-row">
+        <input class="finput" id="pathInput" placeholder="click Load to pick test.xml" readonly>
+        <button class="btn b-blue" onclick="onLoad()">Load</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn b-ghost" id="reloadBtn" onclick="doReload()" disabled>↺ Reload</button>
+        <button class="btn b-ghost" onclick="togglePaste()">Paste XML</button>
+      </div>
+      <div class="paste-area" id="pasteArea">
+        <textarea id="pasteBox" placeholder="Paste StatBroadcast XML here…"></textarea>
+        <button class="btn b-blue" style="width:100%;" onclick="doPaste()">Parse</button>
+      </div>
+    </div>
+
+    <!-- OVERRIDE STATUS -->
+    <div class="sb">
+      <div class="sb-hd">Current Batter Override</div>
+      <div class="ov-card" id="ovCard">
+
+        <div class="ov-label">Detected from XML</div>
+        <div class="ov-name" id="ovDetected">—</div>
+        <div class="ov-meta" id="ovDetectedMeta">load test.xml to begin</div>
+
+        <div id="ovTargetBlock" style="display:none;">
+          <div class="ov-arrow-row">
+            <div class="ov-arrow">▼</div>
+            <div class="ov-label" style="margin:0;">Replacing with</div>
+          </div>
+          <div class="ov-name is-ov" id="ovTarget">—</div>
+          <div class="ov-meta" id="ovTargetMeta"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SAVE / RESTORE -->
+    <div class="sb">
+      <div class="sb-hd">Output → test.xml</div>
+      <p class="save-note">
+        Load <code>test.xml</code> via the picker above — the page holds a write handle to that exact file. <b>Save Override</b> and <b>Clear &amp; Restore</b> both overwrite it in place with no download prompt.<br><br>
+        The ↓ button is always available as a manual download fallback.
+      </p>
+      <div class="btn-row" style="margin-bottom:5px;">
+        <button class="btn b-gold" id="saveBtn" onclick="doSave()" disabled>▶ Save Override → test.xml</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn b-red"   id="clearBtn"  onclick="doClear()"    disabled>✕ Clear &amp; Restore</button>
+        <button class="btn b-ghost" id="dlBtn"     onclick="doDL()"       disabled style="flex:0 0 auto;padding:6px 9px;">↓</button>
+      </div>
+    </div>
+
+    <!-- SEASON STATS for active batter -->
+    <div class="sb" id="seasonSection" style="display:none;">
+      <div class="sb-hd" id="seasonHd">Season Stats</div>
+      <div class="stat-grid" id="seasonGrid"></div>
+    </div>
+
+    <!-- GAME STATS for active batter -->
+    <div class="sb" id="gameStatSection" style="display:none;">
+      <div class="sb-hd" id="gameStatHd">Today</div>
+      <div class="game-stat-row" id="gameStatRow"></div>
+    </div>
+
+  </div>
+
+  <!-- ── MAIN LINEUPS ── -->
+  <div class="main">
+
+    <!-- team headers -->
+    <div class="team-headers" id="teamHeaders" style="display:none;">
+      <div class="th">
+        <div class="th-id guest" id="gId">VIS</div>
+        <div class="th-meta">
+          <div class="th-name"   id="gName">Visitor</div>
+          <div class="th-record" id="gRecord"></div>
+        </div>
+        <div class="th-badge down" id="gBadge">FIELDING</div>
+      </div>
+      <div class="th">
+        <div class="th-id home" id="hId">HOME</div>
+        <div class="th-meta">
+          <div class="th-name"   id="hName">Home</div>
+          <div class="th-record" id="hRecord"></div>
+        </div>
+        <div class="th-badge down" id="hBadge">FIELDING</div>
+      </div>
+    </div>
+
+    <!-- column headers -->
+    <div class="col-headers" id="colHeaders" style="display:none;">
+      <div class="col-hd">
+        <div class="chd-spot">#</div>
+        <div class="chd-uni">UNI</div>
+        <div class="chd-name">NAME</div>
+        <div class="chd-pos">POS</div>
+        <div class="chd-avg">AVG</div>
+        <div class="chd-ab">AB</div>
+        <div class="chd-h">H</div>
+        <div class="chd-rbi">RBI</div>
+      </div>
+      <div class="col-hd">
+        <div class="chd-spot">#</div>
+        <div class="chd-uni">UNI</div>
+        <div class="chd-name">NAME</div>
+        <div class="chd-pos">POS</div>
+        <div class="chd-avg">AVG</div>
+        <div class="chd-ab">AB</div>
+        <div class="chd-h">H</div>
+        <div class="chd-rbi">RBI</div>
+      </div>
+    </div>
+
+    <!-- lineups -->
+    <div class="lineups" id="lineups">
+      <div class="empty" style="grid-column:1/-1;">
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" opacity="0.25">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+        </svg>
+        Load test.xml to display lineups
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sb-fi">File: <span id="sfFile">—</span></div>
+  <div class="sb-fi">Inn: <span id="sfInn">—</span></div>
+  <div class="sb-fi">Outs: <span id="sfOuts">—</span></div>
+  <div class="sb-fi">Batting: <span id="sfBatting">—</span></div>
+  <div class="sb-sep"></div>
+  <div class="sb-ov" id="sfOv">⚡ OVERRIDE ACTIVE</div>
+  <div class="sb-fi" id="sfSaved"></div>
+</div>
+
+<script>
+'use strict';
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let rawXML         = '';
+let fileHandle     = null;   // FileSystemFileHandle — retained for in-place writes
+let game           = null;
+let detectedBatter = null;   // player obj of XML-detected current batter
+let overridePick   = null;   // player obj the operator has selected
+
+function openSelf() {
+  // Open this same HTML file as a top-level tab
+  const url = window.location.href;
+  window.open(url, '_blank');
+}
+
+// Auto-detect iframe context on load and show banner immediately
+// so the operator sees the instruction before clicking anything.
+(function detectContext() {
+  if (window.self !== window.top) {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('iframeBanner').style.display = '';
+    });
+  }
+})();
+
+// ── FILE SYSTEM ACCESS API ────────────────────────────────────────────────
+// Uses showOpenFilePicker() so the page holds a write-capable handle.
+// Every save/clear writes directly back to the same file — no download prompt.
+
+async function onLoad() {
+  // File System Access API requires a top-level browsing context —
+  // it will not work inside an iframe (e.g. Claude.ai preview).
+  // Detect this and tell the operator clearly.
+  if (window.self !== window.top) {
+    showIframeWarning();
+    return;
+  }
+  if (!window.showOpenFilePicker) {
+    toast('showOpenFilePicker not available — use Chrome or Edge', 'err');
+    return;
+  }
+  try {
+    const [handle] = await window.showOpenFilePicker({
+      types: [{ description: 'XML Files', accept: { 'application/xml': ['.xml'], 'text/xml': ['.xml'] } }],
+      multiple: false
+    });
+    fileHandle = handle;
+    document.getElementById('pathInput').value = handle.name;
+    document.getElementById('reloadBtn').disabled = false;
+    document.getElementById('clearBtn').disabled = false;
+    hideBanner();
+    await readHandle();
+  } catch (e) {
+    if (e.name !== 'AbortError') toast('Could not open file: ' + e.message, 'err');
+  }
+}
+
+function showIframeWarning() {
+  document.getElementById('iframeBanner').style.display = '';
+}
+function hideBanner() {
+  document.getElementById('iframeBanner').style.display = 'none';
+}
+
+async function readHandle() {
+  if (!fileHandle) return;
+  const file = await fileHandle.getFile();
+  rawXML = await file.text();
+  parseAndRender();
+}
+
+async function doReload() {
+  if (!fileHandle) return;
+  overridePick = null;
+  await readHandle();
+  toast('Reloaded from disk', 'ok');
+}
+
+// Core write — used by both doSave() and doClear()
+async function writeToHandle(content) {
+  if (!fileHandle) {
+    // No handle — fall back to download
+    triggerDL(content, 'test.xml');
+    return false;
+  }
+  // Verify we still have write permission; re-request if needed
+  let perm = await fileHandle.queryPermission({ mode: 'readwrite' });
+  if (perm !== 'granted') {
+    perm = await fileHandle.requestPermission({ mode: 'readwrite' });
+  }
+  if (perm !== 'granted') {
+    toast('Write permission denied — check browser settings', 'err');
+    return false;
+  }
+  const writable = await fileHandle.createWritable();
+  await writable.write(content);
+  await writable.close();
+  return true;
+}
+
+function togglePaste() {
+  const el = document.getElementById('pasteArea');
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+function doPaste() {
+  const v = document.getElementById('pasteBox').value.trim();
+  if (!v) { toast('Nothing to parse','err'); return; }
+  rawXML = v; fileHandle = null;
+  document.getElementById('pathInput').value = 'pasted (no write handle)';
+  document.getElementById('pasteArea').style.display = 'none';
+  overridePick = null;
+  parseAndRender();
+}
+
+// ── XML PARSE ─────────────────────────────────────────────────────────────
+function ga(str, name) {
+  const m = str.match(new RegExp('\\b' + name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '="([^"]*)"'));
+  return m ? m[1] : '';
+}
+
+function parseAndRender() {
+  try {
+    game = parseGame(rawXML);
+    overridePick = null;
+    render();
+    toast(game.visitor.name + ' @ ' + game.home.name,'ok');
+  } catch(e) {
+    toast('Parse error: ' + e.message, 'err');
+    console.error(e);
+  }
+}
+
+function parseGame(xml) {
+  const g = {
+    visitor: null, home: null,
+    inn: '?', outs: '?', battingVH: '?', seq: '?', cbName: ''
+  };
+
+  // ── Teams & Players
+  const teamRx = /<team\s+([^>]+)>([\s\S]*?)<\/team>/g;
+  let tm;
+  while ((tm = teamRx.exec(xml)) !== null) {
+    const ta = tm[1], tb = tm[2];
+    const vh = ga(ta,'vh');
+    const team = {
+      vh, id: ga(ta,'id'), name: ga(ta,'name'), record: ga(ta,'record'),
+      players: [], byUni: {}, byShort: {}, lineup: []
+    };
+
+    const pRx = /<player\s+([^>]+)>([\s\S]*?)<\/player>/g;
+    let pm;
+    while ((pm = pRx.exec(tb)) !== null) {
+      const pa = pm[1], pb = pm[2];
+      const spot = parseInt(ga(pa,'spot')||'0');
+
+      // Parse hitting (today) and hitseason
+      const hitM  = pb.match(/<hitting\s+([^/>\n]+)/);
+      const hsnM  = pb.match(/<hitseason\s+([^/>\n]+)/);
+
+      const p = {
+        name:      ga(pa,'name'),
+        shortname: ga(pa,'shortname'),
+        uni:       ga(pa,'uni'),
+        spot,
+        pos:       ga(pa,'atpos') || ga(pa,'pos'),
+        bats:      ga(pa,'bats'),
+        isSub:     ga(pa,'sub') === '1',
+        gp:        ga(pa,'gp'),
+        today:     hitM  ? parseSec(hitM[1])  : {},
+        season:    hsnM  ? parseSec(hsnM[1])  : {},
+      };
+
+      team.players.push(p);
+      if (p.uni)       team.byUni[p.uni]       = p;
+      if (p.shortname) team.byShort[p.shortname] = p;
+    }
+
+    // Build batting-order lineup (spot > 0, last sub wins per spot)
+    const bySpot = {};
+    for (const p of team.players) {
+      if (p.spot > 0) {
+        if (!bySpot[p.spot] || p.isSub) bySpot[p.spot] = p;
+      }
+    }
+    team.lineup = Object.values(bySpot).sort((a,b) => a.spot - b.spot);
+    if (vh === 'V') g.visitor = team;
+    else            g.home    = team;
+  }
+
+  // ── Current batter — last <play> element
+  const plays = [...xml.matchAll(/<play\s+([^>]+)>/g)];
+  if (plays.length) {
+    const last    = plays[plays.length-1];
+    const lastA   = last[1];
+    const lastIdx = last.index;
+    g.cbName = ga(lastA,'batter');
+    g.seq    = ga(lastA,'seq');
+    g.outs   = ga(lastA,'outs');
+
+    // Current inning
+    const inns = [...xml.matchAll(/<inning number="(\d+)"/g)];
+    g.inn = '?';
+    for (const im of inns) { if (im.index < lastIdx) g.inn = im[1]; }
+
+    // Batting half — look backward in raw text for nearest <batting vh="...">
+    const ctx = xml.substring(Math.max(0, lastIdx - 700), lastIdx);
+    const vhm = [...ctx.matchAll(/batting vh="([^"]+)"/g)];
+    g.battingVH = vhm.length ? vhm[vhm.length-1][1] : '?';
+  }
+
+  // Resolve detected batter player object
+  detectedBatter = null;
+  if (g.cbName && g.battingVH !== '?') {
+    const t = g.battingVH === 'V' ? g.visitor : g.home;
+    detectedBatter = t?.byShort[g.cbName] || null;
+  }
+
+  return g;
+}
+
+function parseSec(attrStr) {
+  const fields = ['ab','r','h','rbi','hr','bb','so','double','hbp','sb','sf','sh','avg','kl'];
+  const obj = {};
+  for (const f of fields) obj[f] = ga(attrStr, f);
+  return obj;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  if (!game) return;
+  const g = game;
+
+  // Team headers
+  document.getElementById('teamHeaders').style.display = '';
+  document.getElementById('colHeaders').style.display  = '';
+  document.getElementById('dlBtn').disabled = false;
+
+  document.getElementById('gId').textContent     = g.visitor?.id     || 'VIS';
+  document.getElementById('gName').textContent   = g.visitor?.name   || '';
+  document.getElementById('gRecord').textContent = g.visitor?.record ? `(${g.visitor.record})` : '';
+  document.getElementById('hId').textContent     = g.home?.id        || 'HOME';
+  document.getElementById('hName').textContent   = g.home?.name      || '';
+  document.getElementById('hRecord').textContent = g.home?.record    ? `(${g.home.record})` : '';
+
+  // Batting indicators — Daktronics AT_BAT_INDICATOR is '>' for current batter's team
+  const gBadge = document.getElementById('gBadge');
+  const hBadge = document.getElementById('hBadge');
+  if (g.battingVH === 'V') {
+    gBadge.textContent = '▶ BATTING'; gBadge.className = 'th-badge up';
+    hBadge.textContent = 'FIELDING';  hBadge.className = 'th-badge down';
+  } else if (g.battingVH === 'H') {
+    hBadge.textContent = '▶ BATTING'; hBadge.className = 'th-badge up';
+    gBadge.textContent = 'FIELDING';  gBadge.className = 'th-badge down';
+  } else {
+    gBadge.textContent = '—'; gBadge.className = 'th-badge down';
+    hBadge.textContent = '—'; hBadge.className = 'th-badge down';
+  }
+
+  // Status bar
+  document.getElementById('sfFile').textContent    = fileHandle ? fileHandle.name : 'pasted (no write handle)';
+  document.getElementById('sfInn').textContent     = g.inn;
+  document.getElementById('sfOuts').textContent    = g.outs;
+  document.getElementById('sfBatting').textContent =
+    g.battingVH === 'V' ? `TOP · ${g.visitor?.name||''}` :
+    g.battingVH === 'H' ? `BOT · ${g.home?.name||''}` : '—';
+
+  // Sidebar — detected batter
+  const active = overridePick || detectedBatter;
+  if (detectedBatter) {
+    document.getElementById('ovDetected').innerHTML =
+      `<span class="num">#${detectedBatter.uni}</span>${detectedBatter.shortname}`;
+    document.getElementById('ovDetectedMeta').textContent =
+      `${detectedBatter.name} · ${(detectedBatter.pos||'').toUpperCase()} · Inn ${g.inn} · ${g.outs} out`;
+  } else if (g.cbName) {
+    document.getElementById('ovDetected').textContent = g.cbName;
+    document.getElementById('ovDetectedMeta').textContent = `Inn ${g.inn} · ${g.outs} out`;
+  }
+
+  renderOverride();
+  renderLineups();
+  renderStats(active);
+  renderPill();
+}
+
+function renderOverride() {
+  const card    = document.getElementById('ovCard');
+  const block   = document.getElementById('ovTargetBlock');
+  const saveBtn = document.getElementById('saveBtn');
+  const clearBtn= document.getElementById('clearBtn');
+  const sfOv    = document.getElementById('sfOv');
+
+  if (overridePick) {
+    card.classList.add('has-ov');
+    block.style.display = '';
+    document.getElementById('ovTarget').innerHTML =
+      `<span class="num">#${overridePick.uni}</span>${overridePick.shortname}`;
+    const teamName = overridePick.vh === 'V' ? game.visitor?.name : game.home?.name;
+    document.getElementById('ovTargetMeta').textContent =
+      `${overridePick.name} · ${(overridePick.pos||'').toUpperCase()} · Spot ${overridePick.spot} · ${teamName||''}`;
+    saveBtn.disabled  = false;   // enabled whenever a player is selected
+    clearBtn.disabled = false;
+    sfOv.style.display = '';
+  } else {
+    card.classList.remove('has-ov');
+    block.style.display = 'none';
+    saveBtn.disabled  = true;
+    clearBtn.disabled = !rawXML;
+    sfOv.style.display = 'none';
+  }
+}
+
+function renderLineups() {
+  const wrap = document.getElementById('lineups');
+  wrap.innerHTML = '';
+
+  for (const vh of ['V','H']) {
+    const team = vh === 'V' ? game.visitor : game.home;
+    const col  = document.createElement('div');
+    col.className = 'lineup-col';
+    const inner = document.createElement('div');
+    inner.className = 'lineup-inner';
+
+    if (!team?.lineup?.length) {
+      inner.innerHTML = '<div style="padding:20px;text-align:center;color:var(--txt3);font-size:12px;letter-spacing:0.05em;">NO LINEUP DATA</div>';
+    } else {
+      for (const p of team.lineup) {
+        inner.appendChild(buildRow(p, vh));
+      }
+    }
+    col.appendChild(inner);
+    wrap.appendChild(col);
+  }
+}
+
+function buildRow(p, vh) {
+  const row = document.createElement('div');
+  row.className = 'br';
+
+  const isAtBat   = detectedBatter &&
+    p.shortname === detectedBatter.shortname &&
+    vh === game.battingVH;
+
+  const isSelected = overridePick &&
+    p.shortname === overridePick.shortname &&
+    vh === overridePick.vh;
+
+  if (isAtBat)   row.classList.add('at-bat');
+  if (isSelected) row.classList.add('selected');
+
+  // Stats: prefer today's game stats (from DID: GAME_AB, GAME_HITS, GAME_RBI)
+  // Fall back to season for AVG
+  const t = p.today  || {};
+  const s = p.season || {};
+
+  const avg  = s.avg  || '—';
+  const ab   = t.ab   || '0';
+  const h    = t.h    || '0';
+  const rbi  = t.rbi  || '0';
+
+  row.innerHTML = `
+    <div class="br-indicator"></div>
+    <div class="br-spot">${p.spot}</div>
+    <div class="br-uni">${p.uni||'—'}</div>
+    <div class="br-name-block">
+      <div class="br-name">${p.name || p.shortname}</div>
+      <div class="br-pos">${(p.pos||'?').toUpperCase()}${p.bats?' · '+p.bats:''}</div>
+    </div>
+    <div class="br-stats">
+      <div class="brs"><div class="sv">${avg}</div><div class="sk">AVG</div></div>
+      <div class="brs"><div class="sv">${ab}</div><div class="sk">AB</div></div>
+      <div class="brs"><div class="sv">${h}</div><div class="sk">H</div></div>
+      <div class="brs"><div class="sv">${rbi}</div><div class="sk">RBI</div></div>
+    </div>
+    ${p.isSub ? '<div class="sub-tag">SUB</div>' : ''}
+  `;
+
+  row.addEventListener('click', () => onRowClick(p, vh));
+  return row;
+}
+
+function renderStats(p) {
+  const sSection = document.getElementById('seasonSection');
+  const gSection = document.getElementById('gameStatSection');
+
+  if (!p) { sSection.style.display = 'none'; gSection.style.display = 'none'; return; }
+
+  const who = overridePick || p;
+  const label = overridePick ? '▶ Override — Season' : 'Detected Batter — Season';
+  document.getElementById('seasonHd').textContent = label;
+
+  const s = who.season || {};
+  const seasonDefs = [
+    {k:'avg',l:'AVG'},{k:'ab',l:'AB'},{k:'h',l:'H'},
+    {k:'hr',l:'HR'},{k:'rbi',l:'RBI'},{k:'bb',l:'BB'},
+    {k:'so',l:'SO'},{k:'sb',l:'SB'},{k:'hbp',l:'HBP'},
+  ];
+  sSection.style.display = '';
+  document.getElementById('seasonGrid').innerHTML = seasonDefs.map(d =>
+    `<div class="stat-cell"><div class="v">${s[d.k]||(d.k==='avg'?'—':'0')}</div><div class="k">${d.l}</div></div>`
+  ).join('');
+
+  // Today's game stats — mirrors Daktronics GAME_AB / GAME_HITS / GAME_RBI / GAME_RUNS
+  const t = who.today || {};
+  const gameDefs = [
+    {k:'ab',l:'AB'},{k:'h',l:'H'},{k:'rbi',l:'RBI'},{k:'r',l:'R'},
+  ];
+  document.getElementById('gameStatHd').textContent =
+    (overridePick ? '▶ Override' : 'Detected') + ' — Today';
+  gSection.style.display = '';
+  document.getElementById('gameStatRow').innerHTML = gameDefs.map(d =>
+    `<div class="stat-cell" style="flex:1;"><div class="v">${t[d.k]||'0'}</div><div class="k">${d.l}</div></div>`
+  ).join('');
+}
+
+function renderPill() {
+  const pill = document.getElementById('pill');
+  const txt  = document.getElementById('pillTxt');
+  if (overridePick) {
+    pill.className = 'pill active';
+    txt.textContent = `OVERRIDE · #${overridePick.uni} ${overridePick.shortname}`;
+  } else if (rawXML) {
+    pill.className = 'pill live';
+    txt.textContent = detectedBatter
+      ? `LIVE · #${detectedBatter.uni} ${detectedBatter.shortname}`
+      : 'LIVE · monitoring';
+  } else {
+    pill.className = 'pill';
+    txt.textContent = 'No file loaded';
+  }
+}
+
+// ── ROW CLICK ─────────────────────────────────────────────────────────────
+function onRowClick(p, vh) {
+  // Toggle off if already selected
+  if (overridePick && overridePick.shortname === p.shortname && overridePick.vh === vh) {
+    overridePick = null;
+  } else {
+    overridePick = { ...p, vh };
+  }
+  renderOverride();
+  renderLineups();
+  renderStats(overridePick || detectedBatter);
+  renderPill();
+}
+
+// ── XML MANIPULATION ──────────────────────────────────────────────────────
+// The override replaces the detected current batter's identity everywhere
+// in the XML so that when Daktronics runs the DID conversion it sees the
+// override player's name/number/stats in all LINEUP_XX_NAME, _NUMBER,
+// _AT_BAT_INDICATOR, _AVG, GAME_HITS, GAME_AB, GAME_RBI, GAME_RUNS fields,
+// plus DUE_UP slots and base runner name fields.
+function buildModXML() {
+  if (!rawXML || !overridePick) return rawXML;
+
+  // If we couldn't resolve detectedBatter from the XML, we can still
+  // save — just skip the name-swap and write the XML as-is with a warning.
+  if (!detectedBatter) return rawXML;
+
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const oldShort = detectedBatter.shortname;
+  const oldFull  = detectedBatter.name;
+  const newShort = overridePick.shortname;
+  const newFull  = overridePick.name;
+
+  let out = rawXML;
+
+  // 1 — All attribute value occurrences of the old shortname
+  //     (batter="", first="", second="", third="", shortname="")
+  out = out.replace(new RegExp(`="${esc(oldShort)}"`, 'g'), `="${newShort}"`);
+
+  // 2 — Full name attribute values (name="...")
+  if (oldFull && oldFull !== oldShort)
+    out = out.replace(new RegExp(`="${esc(oldFull)}"`, 'g'), `="${newFull}"`);
+
+  // 3 — Name inside narrative text nodes
+  out = out.replace(new RegExp(esc(oldShort), 'g'), newShort);
+  if (oldFull && oldFull !== oldShort)
+    out = out.replace(new RegExp(esc(oldFull), 'g'), newFull);
+
+  return out;
+}
+
+// ── SAVE / CLEAR / DOWNLOAD ───────────────────────────────────────────────
+async function doSave() {
+  if (!overridePick) {
+    toast('Select a batter from the lineup first', 'err');
+    return;
+  }
+  if (!detectedBatter) {
+    toast('Could not detect current batter in XML — name swap skipped, saving as-is', 'warn');
+  }
+  const xml = buildModXML();
+  const wrote = await writeToHandle(xml);
+  const t = new Date().toLocaleTimeString();
+  if (wrote) {
+    document.getElementById('sfSaved').textContent = `Written ${t}`;
+    toast(`test.xml overwritten · Daktronics now sees #${overridePick.uni} ${overridePick.shortname} as current batter`, 'ok');
+  } else {
+    document.getElementById('sfSaved').textContent = `Downloaded ${t}`;
+    toast('Fell back to download — load file via picker first for in-place writes', 'warn');
+  }
+}
+
+async function doClear() {
+  overridePick = null;
+  renderOverride();
+  renderLineups();
+  renderStats(detectedBatter);
+  renderPill();
+  if (!rawXML) return;
+  const wrote = await writeToHandle(rawXML);
+  const t = new Date().toLocaleTimeString();
+  if (wrote) {
+    document.getElementById('sfSaved').textContent = `Restored ${t}`;
+    toast('Override cleared · original test.xml written back · stats operator feed active', 'warn');
+  } else {
+    document.getElementById('sfSaved').textContent = `Downloaded ${t}`;
+    toast('Fell back to download — original XML sent', 'warn');
+  }
+}
+
+function doDL() {
+  // Manual download always available as backup
+  const xml = overridePick ? buildModXML() : rawXML;
+  if (xml) triggerDL(xml, 'test.xml');
+}
+
+function triggerDL(content, fname) {
+  const blob = new Blob([content], {type:'application/xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastTmr;
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => { el.className = 'toast'; }, 3600);
+}
+</script>
+</body>
+</html>
