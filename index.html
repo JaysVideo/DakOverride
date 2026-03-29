@@ -533,10 +533,12 @@ input[type=file] { display: none; }
   <div class="sb-fi">File: <span id="sfFile">—</span></div>
   <div class="sb-fi">Inn: <span id="sfInn">—</span></div>
   <div class="sb-fi">Outs: <span id="sfOuts">—</span></div>
+  <div class="sb-fi">B-S: <span id="sfBS">—</span></div>
   <div class="sb-fi">Batting: <span id="sfBatting">—</span></div>
   <div class="sb-sep"></div>
   <div class="sb-ov" id="sfOv">⚡ OVERRIDE ACTIVE</div>
   <div class="sb-fi" id="sfSaved"></div>
+  <div class="sb-fi" style="color:var(--txt3);">↺ <span id="sfRefresh">no file loaded</span></div>
 </div>
 
 <script>
@@ -592,6 +594,7 @@ async function onLoad() {
     document.getElementById('clearBtn').disabled = false;
     hideBanner();
     await readHandle();
+    startAutoRefresh();
   } catch (e) {
     if (e.name !== 'AbortError') toast('Could not open file: ' + e.message, 'err');
   }
@@ -602,6 +605,50 @@ function showIframeWarning() {
 }
 function hideBanner() {
   document.getElementById('iframeBanner').style.display = 'none';
+}
+
+// ── AUTO-REFRESH ──────────────────────────────────────────────────────────
+// Re-reads the file every 10 seconds so the operator doesn't have to
+// manually reload. Pauses while an override is active so a live save
+// doesn't get immediately stomped by a stale read.
+
+let autoRefreshTimer  = null;
+const AUTO_REFRESH_MS = 10000;
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(async () => {
+    if (!fileHandle) return;
+    // Don't auto-reload while an override is actively saved —
+    // the stats operator's updated file would wipe our intercept.
+    if (overridePick) {
+      updateRefreshIndicator('paused — override active');
+      return;
+    }
+    try {
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      if (text !== rawXML) {
+        rawXML = text;
+        parseAndRender();
+        updateRefreshIndicator('updated ' + new Date().toLocaleTimeString());
+      } else {
+        updateRefreshIndicator('checked ' + new Date().toLocaleTimeString());
+      }
+    } catch(e) {
+      updateRefreshIndicator('read error — ' + e.message);
+    }
+  }, AUTO_REFRESH_MS);
+  updateRefreshIndicator('watching every 10s');
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+
+function updateRefreshIndicator(msg) {
+  const el = document.getElementById('sfRefresh');
+  if (el) el.textContent = msg;
 }
 
 async function readHandle() {
@@ -727,60 +774,69 @@ function parseGame(xml) {
 
   // ── Current batter detection
   //
-  // Strategy: find the ACTIVE half-inning — the last <batting vh="..."> block
-  // that has NO closing <innsummary> tag. A completed half-inning always ends
-  // with <innsummary r="..." h="..." .../>. The live one doesn't yet.
+  // PRIMARY SOURCE: <status> element — StatBroadcast maintains this in
+  // real time with the current batter, inning, outs, bases, B/S/NP.
+  // This is the ground truth, not the play-by-play log.
   //
-  // Within that active block, the last <play batter="..."> is the current
-  // batter — StatBroadcast writes a play entry (sometimes with "No play."
-  // narrative) the moment a new batter steps in.
+  // FALLBACK: last <play> in the active (no <innsummary>) half-inning block.
 
-  // Split the plays section out
-  const playsBlock = xml.match(/<plays[\s\S]*?<\/plays>/);
-  if (playsBlock) {
-    const plays = playsBlock[0];
+  const statusMatch = xml.match(/<status\s+([^>]+)>/);
+  if (statusMatch) {
+    const sa = statusMatch[1];
+    const complete = ga(sa, 'complete');
 
-    // Find all <batting vh="..."> blocks
-    const battingRx = /<batting\s+([^>]+)>([\s\S]*?)(?=<batting\s|<\/inning>|<\/plays>)/g;
-    let bm;
-    let activeBattingAttrs = null;
-    let activeBattingBody  = null;
-
-    while ((bm = battingRx.exec(plays)) !== null) {
-      const battingAttrs = bm[1];
-      const battingBody  = bm[2];
-      // A completed half-inning has an <innsummary> inside it
-      const isComplete = /<innsummary/.test(battingBody);
-      if (!isComplete) {
-        // This is the live half-inning
-        activeBattingAttrs = battingAttrs;
-        activeBattingBody  = battingBody;
-      } else {
-        // Keep track even of completed ones so we can fall back gracefully
-        activeBattingAttrs = battingAttrs;
-        activeBattingBody  = battingBody;
-        g.activeInnComplete = true;
-      }
+    if (complete !== 'Y') {
+      // Live game — status is authoritative
+      g.cbName    = ga(sa, 'batter');
+      g.battingVH = ga(sa, 'vh');
+      g.inn       = ga(sa, 'inning');
+      g.outs      = ga(sa, 'outs');
+      g.balls     = ga(sa, 'b');
+      g.strikes   = ga(sa, 's');
+      g.pitcher   = ga(sa, 'pitcher');
+      g.onFirst   = ga(sa, 'first');
+      g.onSecond  = ga(sa, 'second');
+      g.onThird   = ga(sa, 'third');
+      g.vup       = ga(sa, 'vup');   // visitor next batter spot
+      g.hup       = ga(sa, 'hup');   // home next batter spot
+      g.np        = ga(sa, 'np');    // pitcher pitch count
+      g.activeInnComplete = false;
+    } else {
+      // Game over — flag it, still pull last known state
+      g.cbName    = ga(sa, 'batter');
+      g.battingVH = ga(sa, 'vh');
+      g.inn       = ga(sa, 'inning');
+      g.outs      = ga(sa, 'outs');
+      g.activeInnComplete = true;
     }
-
-    if (activeBattingAttrs && activeBattingBody) {
-      g.battingVH = ga(activeBattingAttrs, 'vh');
-
-      // Last <play> inside this batting block = current (or most recent) batter
-      const playRx = /<play\s+([^>]+)>/g;
-      let pm2, lastPlay = null;
-      while ((pm2 = playRx.exec(activeBattingBody)) !== null) lastPlay = pm2[1];
-
-      if (lastPlay) {
-        g.cbName = ga(lastPlay, 'batter');
-        g.outs   = ga(lastPlay, 'outs');
-        g.seq    = ga(lastPlay, 'seq');
+  } else {
+    // No <status> element — fall back to active half-inning detection
+    const playsBlock = xml.match(/<plays[\s\S]*?<\/plays>/);
+    if (playsBlock) {
+      const plays = playsBlock[0];
+      const battingRx = /<batting\s+([^>]+)>([\s\S]*?)(?=<batting\s|<\/inning>|<\/plays>)/g;
+      let bm, activeBattingAttrs = null, activeBattingBody = null;
+      while ((bm = battingRx.exec(plays)) !== null) {
+        const isComplete = /<innsummary/.test(bm[2]);
+        activeBattingAttrs = bm[1];
+        activeBattingBody  = bm[2];
+        g.activeInnComplete = isComplete;
+        if (!isComplete) break; // found the live one, stop
       }
+      if (activeBattingAttrs && activeBattingBody) {
+        g.battingVH = ga(activeBattingAttrs, 'vh');
+        const playRx = /<play\s+([^>]+)>/g;
+        let pm2, lastPlay = null;
+        while ((pm2 = playRx.exec(activeBattingBody)) !== null) lastPlay = pm2[1];
+        if (lastPlay) {
+          g.cbName = ga(lastPlay, 'batter');
+          g.outs   = ga(lastPlay, 'outs');
+          g.seq    = ga(lastPlay, 'seq');
+        }
+      }
+      const innMatches = [...plays.matchAll(/<inning number="(\d+)"/g)];
+      if (innMatches.length) g.inn = innMatches[innMatches.length-1][1];
     }
-
-    // Current inning — last <inning number="N"> before end of plays
-    const innMatches = [...plays.matchAll(/<inning number="(\d+)"/g)];
-    if (innMatches.length) g.inn = innMatches[innMatches.length-1][1];
   }
 
   // Resolve detected batter to a player object
@@ -838,23 +894,28 @@ function render() {
   document.getElementById('sfBatting').textContent =
     g.battingVH === 'V' ? `TOP · ${g.visitor?.name||''}` :
     g.battingVH === 'H' ? `BOT · ${g.home?.name||''}` : '—';
+  if (g.balls !== undefined && g.balls !== '') {
+    document.getElementById('sfBS') && (document.getElementById('sfBS').textContent = `${g.balls}-${g.strikes}`);
+  }
 
   // Sidebar — current batter
   if (detectedBatter) {
     document.getElementById('ovDetected').innerHTML =
       `<span class="num">#${detectedBatter.uni}</span>${detectedBatter.shortname}`;
     const halfLabel = g.battingVH === 'V' ? 'Top' : g.battingVH === 'H' ? 'Bot' : '';
-    const completeNote = g.activeInnComplete ? ' · inning complete' : '';
+    const completeNote = g.activeInnComplete ? ' · game/inning complete' : '';
+    const bsNote = (g.balls !== undefined && g.balls !== '') ? ` · ${g.balls}-${g.strikes}` : '';
+    const npNote = g.np ? ` · ${g.np}p` : '';
     document.getElementById('ovDetectedMeta').textContent =
-      `${detectedBatter.name} · ${(detectedBatter.pos||'').toUpperCase()} · ${halfLabel} ${g.inn} · ${g.outs} out${completeNote}`;
+      `${detectedBatter.name} · ${(detectedBatter.pos||'').toUpperCase()} · ${halfLabel} ${g.inn} · ${g.outs} out${bsNote}${npNote}${completeNote}`;
   } else if (g.cbName) {
     document.getElementById('ovDetected').textContent = g.cbName;
-    const completeNote = g.activeInnComplete ? ' · inning complete' : '';
+    const completeNote = g.activeInnComplete ? ' · game/inning complete' : '';
     document.getElementById('ovDetectedMeta').textContent =
       `Inn ${g.inn} · ${g.outs} out${completeNote} · not matched to roster`;
   } else {
     document.getElementById('ovDetected').textContent = '—';
-    document.getElementById('ovDetectedMeta').textContent = 'no active half-inning found';
+    document.getElementById('ovDetectedMeta').textContent = 'no status data found in XML';
   }
 
   renderOverride();
