@@ -422,7 +422,7 @@ input[type=file] { display: none; }
       <div class="sb-hd">Current Batter Override</div>
       <div class="ov-card" id="ovCard">
 
-        <div class="ov-label">Detected from XML</div>
+        <div class="ov-label">Now Batting (from live half-inning)</div>
         <div class="ov-name" id="ovDetected">—</div>
         <div class="ov-meta" id="ovDetectedMeta">load test.xml to begin</div>
 
@@ -675,7 +675,8 @@ function parseAndRender() {
 function parseGame(xml) {
   const g = {
     visitor: null, home: null,
-    inn: '?', outs: '?', battingVH: '?', seq: '?', cbName: ''
+    inn: '?', outs: '?', battingVH: '?', seq: '?', cbName: '',
+    activeInnComplete: false
   };
 
   // ── Teams & Players
@@ -694,11 +695,8 @@ function parseGame(xml) {
     while ((pm = pRx.exec(tb)) !== null) {
       const pa = pm[1], pb = pm[2];
       const spot = parseInt(ga(pa,'spot')||'0');
-
-      // Parse hitting (today) and hitseason
-      const hitM  = pb.match(/<hitting\s+([^/>\n]+)/);
-      const hsnM  = pb.match(/<hitseason\s+([^/>\n]+)/);
-
+      const hitM = pb.match(/<hitting\s+([^/>\n]+)/);
+      const hsnM = pb.match(/<hitseason\s+([^/>\n]+)/);
       const p = {
         name:      ga(pa,'name'),
         shortname: ga(pa,'shortname'),
@@ -708,16 +706,14 @@ function parseGame(xml) {
         bats:      ga(pa,'bats'),
         isSub:     ga(pa,'sub') === '1',
         gp:        ga(pa,'gp'),
-        today:     hitM  ? parseSec(hitM[1])  : {},
-        season:    hsnM  ? parseSec(hsnM[1])  : {},
+        today:     hitM ? parseSec(hitM[1]) : {},
+        season:    hsnM ? parseSec(hsnM[1]) : {},
       };
-
       team.players.push(p);
-      if (p.uni)       team.byUni[p.uni]       = p;
-      if (p.shortname) team.byShort[p.shortname] = p;
+      if (p.uni)       team.byUni[p.uni]         = p;
+      if (p.shortname) team.byShort[p.shortname]  = p;
     }
 
-    // Build batting-order lineup (spot > 0, last sub wins per spot)
     const bySpot = {};
     for (const p of team.players) {
       if (p.spot > 0) {
@@ -729,28 +725,65 @@ function parseGame(xml) {
     else            g.home    = team;
   }
 
-  // ── Current batter — last <play> element
-  const plays = [...xml.matchAll(/<play\s+([^>]+)>/g)];
-  if (plays.length) {
-    const last    = plays[plays.length-1];
-    const lastA   = last[1];
-    const lastIdx = last.index;
-    g.cbName = ga(lastA,'batter');
-    g.seq    = ga(lastA,'seq');
-    g.outs   = ga(lastA,'outs');
+  // ── Current batter detection
+  //
+  // Strategy: find the ACTIVE half-inning — the last <batting vh="..."> block
+  // that has NO closing <innsummary> tag. A completed half-inning always ends
+  // with <innsummary r="..." h="..." .../>. The live one doesn't yet.
+  //
+  // Within that active block, the last <play batter="..."> is the current
+  // batter — StatBroadcast writes a play entry (sometimes with "No play."
+  // narrative) the moment a new batter steps in.
 
-    // Current inning
-    const inns = [...xml.matchAll(/<inning number="(\d+)"/g)];
-    g.inn = '?';
-    for (const im of inns) { if (im.index < lastIdx) g.inn = im[1]; }
+  // Split the plays section out
+  const playsBlock = xml.match(/<plays[\s\S]*?<\/plays>/);
+  if (playsBlock) {
+    const plays = playsBlock[0];
 
-    // Batting half — look backward in raw text for nearest <batting vh="...">
-    const ctx = xml.substring(Math.max(0, lastIdx - 700), lastIdx);
-    const vhm = [...ctx.matchAll(/batting vh="([^"]+)"/g)];
-    g.battingVH = vhm.length ? vhm[vhm.length-1][1] : '?';
+    // Find all <batting vh="..."> blocks
+    const battingRx = /<batting\s+([^>]+)>([\s\S]*?)(?=<batting\s|<\/inning>|<\/plays>)/g;
+    let bm;
+    let activeBattingAttrs = null;
+    let activeBattingBody  = null;
+
+    while ((bm = battingRx.exec(plays)) !== null) {
+      const battingAttrs = bm[1];
+      const battingBody  = bm[2];
+      // A completed half-inning has an <innsummary> inside it
+      const isComplete = /<innsummary/.test(battingBody);
+      if (!isComplete) {
+        // This is the live half-inning
+        activeBattingAttrs = battingAttrs;
+        activeBattingBody  = battingBody;
+      } else {
+        // Keep track even of completed ones so we can fall back gracefully
+        activeBattingAttrs = battingAttrs;
+        activeBattingBody  = battingBody;
+        g.activeInnComplete = true;
+      }
+    }
+
+    if (activeBattingAttrs && activeBattingBody) {
+      g.battingVH = ga(activeBattingAttrs, 'vh');
+
+      // Last <play> inside this batting block = current (or most recent) batter
+      const playRx = /<play\s+([^>]+)>/g;
+      let pm2, lastPlay = null;
+      while ((pm2 = playRx.exec(activeBattingBody)) !== null) lastPlay = pm2[1];
+
+      if (lastPlay) {
+        g.cbName = ga(lastPlay, 'batter');
+        g.outs   = ga(lastPlay, 'outs');
+        g.seq    = ga(lastPlay, 'seq');
+      }
+    }
+
+    // Current inning — last <inning number="N"> before end of plays
+    const innMatches = [...plays.matchAll(/<inning number="(\d+)"/g)];
+    if (innMatches.length) g.inn = innMatches[innMatches.length-1][1];
   }
 
-  // Resolve detected batter player object
+  // Resolve detected batter to a player object
   detectedBatter = null;
   if (g.cbName && g.battingVH !== '?') {
     const t = g.battingVH === 'V' ? g.visitor : g.home;
@@ -806,21 +839,27 @@ function render() {
     g.battingVH === 'V' ? `TOP · ${g.visitor?.name||''}` :
     g.battingVH === 'H' ? `BOT · ${g.home?.name||''}` : '—';
 
-  // Sidebar — detected batter
-  const active = overridePick || detectedBatter;
+  // Sidebar — current batter
   if (detectedBatter) {
     document.getElementById('ovDetected').innerHTML =
       `<span class="num">#${detectedBatter.uni}</span>${detectedBatter.shortname}`;
+    const halfLabel = g.battingVH === 'V' ? 'Top' : g.battingVH === 'H' ? 'Bot' : '';
+    const completeNote = g.activeInnComplete ? ' · inning complete' : '';
     document.getElementById('ovDetectedMeta').textContent =
-      `${detectedBatter.name} · ${(detectedBatter.pos||'').toUpperCase()} · Inn ${g.inn} · ${g.outs} out`;
+      `${detectedBatter.name} · ${(detectedBatter.pos||'').toUpperCase()} · ${halfLabel} ${g.inn} · ${g.outs} out${completeNote}`;
   } else if (g.cbName) {
     document.getElementById('ovDetected').textContent = g.cbName;
-    document.getElementById('ovDetectedMeta').textContent = `Inn ${g.inn} · ${g.outs} out`;
+    const completeNote = g.activeInnComplete ? ' · inning complete' : '';
+    document.getElementById('ovDetectedMeta').textContent =
+      `Inn ${g.inn} · ${g.outs} out${completeNote} · not matched to roster`;
+  } else {
+    document.getElementById('ovDetected').textContent = '—';
+    document.getElementById('ovDetectedMeta').textContent = 'no active half-inning found';
   }
 
   renderOverride();
   renderLineups();
-  renderStats(active);
+  renderStats(overridePick || detectedBatter);
   renderPill();
 }
 
