@@ -938,7 +938,7 @@ function renderOverride() {
       `<span class="num">#${overridePick.uni}</span>${overridePick.shortname}`;
     const teamName = overridePick.vh === 'V' ? game.visitor?.name : game.home?.name;
     document.getElementById('ovTargetMeta').textContent =
-      `${overridePick.name} · ${(overridePick.pos||'').toUpperCase()} · Spot ${overridePick.spot} · ${teamName||''}`;
+      `${overridePick.name} · ${(overridePick.pos||'').toUpperCase()} · Order ${overridePick.spot} · ${teamName||''}`;
     saveBtn.disabled  = false;   // enabled whenever a player is selected
     clearBtn.disabled = false;
     sfOv.style.display = '';
@@ -1093,28 +1093,57 @@ function onRowClick(p, vh) {
 // plus DUE_UP slots and base runner name fields.
 function buildModXML() {
   if (!rawXML || !overridePick) return rawXML;
-
-  // If we couldn't resolve detectedBatter from the XML, we can still
-  // save — just skip the name-swap and write the XML as-is with a warning.
   if (!detectedBatter) return rawXML;
 
-  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const esc  = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const oldShort = detectedBatter.shortname;
   const oldFull  = detectedBatter.name;
+  const oldUni   = detectedBatter.uni;
+  const oldSpot  = detectedBatter.spot;
+  const oldPos   = detectedBatter.pos || '';
+
   const newShort = overridePick.shortname;
   const newFull  = overridePick.name;
+  const newUni   = overridePick.uni;
+  const newSpot  = overridePick.spot;
+  const newPos   = overridePick.pos || oldPos; // fall back to original pos if missing
+
+  const battingVH = game.battingVH;   // 'V' or 'H'
+  const upAttr    = battingVH === 'V' ? 'vup' : 'hup'; // which spot attr to update in <status>
 
   let out = rawXML;
 
-  // 1 — All attribute value occurrences of the old shortname
-  //     (batter="", first="", second="", third="", shortname="")
+  // ── 1. Update <status batter="..." vup/hup="...">
+  // Replace batter name in status element
+  out = out.replace(
+    /(<status\s[^>]*\bbatter=")[^"]*"/,
+    `$1${newShort}"`
+  );
+  // Replace the up-spot number (vup or hup) to reflect override player's order position
+  out = out.replace(
+    new RegExp(`(<status\\s[^>]*\\b${upAttr}=")[^"]*"`),
+    `$1${newSpot}"`
+  );
+
+  // ── 2. Update the <batord> entry for the detected batter's slot
+  // The batord slot being vacated by the detected batter needs to now
+  // show the override player's name, uni, and position.
+  // We target the specific batord by spot number within the batting team's block.
+  // Match: <batord spot="N" name="OLD" uni="OLD" pos="OLD">
+  out = out.replace(
+    new RegExp(`(<batord\\s+spot="${oldSpot}"\\s+name=")[^"]*("\\s+uni=")[^"]*("\\s+pos=")[^"]*"`),
+    `$1${newShort}$2${newUni}$3${newPos}"`
+  );
+
+  // ── 3. Replace all attribute value occurrences of the old shortname
+  //     (batter="", first="", second="", third="", shortname="", name="")
   out = out.replace(new RegExp(`="${esc(oldShort)}"`, 'g'), `="${newShort}"`);
 
-  // 2 — Full name attribute values (name="...")
+  // ── 4. Replace full name attribute values
   if (oldFull && oldFull !== oldShort)
     out = out.replace(new RegExp(`="${esc(oldFull)}"`, 'g'), `="${newFull}"`);
 
-  // 3 — Name inside narrative text nodes
+  // ── 5. Replace in narrative text nodes
   out = out.replace(new RegExp(esc(oldShort), 'g'), newShort);
   if (oldFull && oldFull !== oldShort)
     out = out.replace(new RegExp(esc(oldFull), 'g'), newFull);
