@@ -3,395 +3,316 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Videoboard Batter Override</title>
+<title>Dak Override</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@400;500&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg:       #0c0e12;
-  --s1:       #12151b;
-  --s2:       #181c24;
-  --s3:       #1e232e;
-  --border:   #262d3a;
-  --border2:  #32394a;
-  --gold:     #d4a017;
-  --gold-d:   rgba(212,160,23,0.14);
-  --gold-b:   rgba(212,160,23,0.06);
-  --green:    #27a85a;
-  --green-d:  rgba(39,168,90,0.14);
-  --red:      #c94040;
-  --red-d:    rgba(201,64,64,0.12);
-  --blue:     #3d7fc4;
-  --blue-d:   rgba(61,127,196,0.14);
-  --sky:      #5ba8d9;
-  --txt:      #c8d0df;
-  --txt2:     #7a8499;
-  --txt3:     #404a5e;
-  --cond:     'Barlow Condensed', sans-serif;
-  --body:     'Barlow', sans-serif;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e1014; --s1:#13161d; --s2:#191d26; --s3:#1f242f;
+  --border:#252c3a; --border2:#2e3647;
+  --txt:#ced4e0; --txt2:#7d8799; --txt3:#3e4a5e;
+  --gold:#d4a820; --gold-d:rgba(212,168,32,.15); --gold-b:rgba(212,168,32,.06);
+  --green:#25a85a; --green-d:rgba(37,168,90,.14);
+  --red:#c43a3a; --red-d:rgba(196,58,58,.12);
+  --sky:#4a8fd4;
+  --tc-guest:#4a8fd4; --tc-home:#25a85a; /* overridden by team colors */
+  --cond:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
 }
-html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--txt); font-family: var(--cond); }
-body { display: flex; flex-direction: column; }
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--cond)}
+body{display:flex;flex-direction:column}
 
-/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
-.topbar {
-  height: 44px; flex-shrink: 0;
-  display: flex; align-items: center; gap: 12px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--s1);
+/* ── TOPBAR ── */
+.topbar{
+  height:42px;flex-shrink:0;display:flex;align-items:center;gap:10px;
+  padding:0 14px;border-bottom:1px solid var(--border);background:var(--s1);
 }
-.topbar-title {
-  font-size: 15px; font-weight: 700; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--txt);
-}
-.topbar-sub {
-  font-size: 12px; color: var(--txt3); letter-spacing: 0.04em;
-}
-.topbar-sep { flex: 1; }
+.topbar-title{font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.topbar-divider{width:1px;height:18px;background:var(--border2);flex-shrink:0}
+.topbar-sub{font-size:11px;color:var(--txt3);letter-spacing:.04em;font-weight:400}
+.flex1{flex:1}
 
-.pill {
-  display: flex; align-items: center; gap: 6px;
-  font-family: var(--cond); font-size: 11px; letter-spacing: 0.06em;
-  padding: 4px 11px; border-radius: 20px;
-  border: 1px solid var(--border); color: var(--txt2); background: var(--s2);
-  transition: all 0.2s;
+.pill{
+  display:flex;align-items:center;gap:6px;
+  font-family:monospace;font-size:10px;letter-spacing:.05em;
+  padding:4px 10px;border-radius:20px;
+  border:1px solid var(--border);color:var(--txt2);background:var(--s2);
+  transition:all .2s;
 }
-.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-.pill.live   { border-color: rgba(39,168,90,0.45);  color: var(--green); background: var(--green-d); }
-.pill.active { border-color: rgba(212,160,23,0.45); color: var(--gold);  background: var(--gold-b); }
-.pill.live .dot { animation: blink 1.6s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.pill.live{border-color:rgba(37,168,90,.45);color:var(--green);background:var(--green-d)}
+.pill.active{border-color:rgba(212,168,32,.45);color:var(--gold);background:var(--gold-b)}
+.pill.live .dot{animation:blink 1.6s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
-.layout { display: flex; flex: 1; overflow: hidden; }
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden}
 
-/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
-.sidebar {
-  width: 276px; flex-shrink: 0;
-  border-right: 1px solid var(--border);
-  background: var(--s1);
-  display: flex; flex-direction: column;
-  overflow-y: auto;
+/* ── SIDEBAR ── */
+.sidebar{
+  width:268px;flex-shrink:0;
+  border-right:1px solid var(--border);background:var(--s1);
+  display:flex;flex-direction:column;overflow-y:auto;
 }
-.sb { padding: 13px 14px; border-bottom: 1px solid var(--border); }
-.sb-hd {
-  font-size: 9px; font-weight: 600; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--txt3); margin-bottom: 9px;
+.sb{padding:12px 14px;border-bottom:1px solid var(--border)}
+.sb-hd{
+  font-size:9px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--txt3);margin-bottom:9px;
 }
 
-/* file controls */
-.file-row { display: flex; gap: 5px; margin-bottom: 6px; }
-.finput {
-  flex: 1; min-width: 0;
-  background: #080a0d; border: 1px solid var(--border);
-  border-radius: 3px; color: var(--txt);
-  font-family: monospace; font-size: 10px;
-  padding: 6px 9px; outline: none;
-  transition: border-color 0.15s;
+.finput{
+  width:100%;background:#080a0d;border:1px solid var(--border);
+  border-radius:3px;color:var(--txt);font-family:monospace;font-size:10px;
+  padding:6px 9px;outline:none;transition:border-color .15s;
 }
-.finput:focus { border-color: var(--sky); }
-.finput::placeholder { color: var(--txt3); }
+.finput:focus{border-color:var(--sky)}
+.finput::placeholder{color:var(--txt3)}
+.finput[readonly]{cursor:default}
 
-.btn {
-  font-family: var(--cond); font-size: 10px; font-weight: 600;
-  letter-spacing: 0.07em; text-transform: uppercase;
-  border: none; border-radius: 3px; cursor: pointer;
-  padding: 6px 11px; flex-shrink: 0; white-space: nowrap;
-  transition: all 0.13s;
+.btn{
+  font-family:var(--cond);font-size:10px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+  border:none;border-radius:3px;cursor:pointer;
+  padding:6px 11px;white-space:nowrap;transition:all .12s;flex-shrink:0;
 }
-.btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.b-blue   { background: var(--blue);  color: #fff; }
-.b-blue:not(:disabled):hover { filter: brightness(1.18); }
-.b-ghost  { background: transparent; border: 1px solid var(--border); color: var(--txt2); }
-.b-ghost:not(:disabled):hover { border-color: var(--txt2); color: var(--txt); }
-.b-gold   { background: var(--gold);  color: #000; }
-.b-gold:not(:disabled):hover { filter: brightness(1.1); }
-.b-red    { background: transparent; border: 1px solid var(--red); color: var(--red); }
-.b-red:not(:disabled):hover { background: var(--red); color: #fff; }
-.b-green  { background: var(--green); color: #fff; }
-.b-green:not(:disabled):hover { filter: brightness(1.1); }
-input[type=file] { display: none; }
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.b-blue{background:var(--sky);color:#fff}
+.b-blue:not(:disabled):hover{filter:brightness(1.18)}
+.b-gold{background:var(--gold);color:#000}
+.b-gold:not(:disabled):hover{filter:brightness(1.1)}
+.b-ghost{background:transparent;border:1px solid var(--border);color:var(--txt2)}
+.b-ghost:not(:disabled):hover{border-color:var(--txt2);color:var(--txt)}
+.b-red{background:transparent;border:1px solid var(--red);color:var(--red)}
+.b-red:not(:disabled):hover{background:var(--red);color:#fff}
+.btn-row{display:flex;gap:5px;margin-top:6px}
+.btn-row .btn{flex:1}
+input[type=file]{display:none}
 
-.btn-row { display: flex; gap: 5px; }
-.btn-row .btn { flex: 1; }
-
-/* paste area */
-.paste-area { display: none; margin-top: 7px; }
-.paste-area textarea {
-  width: 100%; height: 88px; resize: vertical;
-  background: #080a0d; border: 1px solid var(--border);
-  border-radius: 3px; color: var(--txt);
-  font-family: monospace; font-size: 10px;
-  padding: 8px; outline: none; margin-bottom: 5px;
+/* paste */
+.paste-wrap{display:none;margin-top:8px}
+.paste-wrap textarea{
+  width:100%;height:80px;resize:vertical;
+  background:#080a0d;border:1px solid var(--border);border-radius:3px;
+  color:var(--txt);font-family:monospace;font-size:10px;
+  padding:7px;outline:none;margin-bottom:5px;
 }
 
 /* override card */
-.ov-card {
-  background: var(--s2); border: 1px solid var(--border);
-  border-radius: 4px; padding: 11px 12px;
-  transition: border-color 0.2s, background 0.2s;
+.ov-card{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:4px;padding:11px 12px;transition:all .2s;
 }
-.ov-card.has-ov { border-color: rgba(212,160,23,0.5); background: var(--gold-b); }
+.ov-card.has-ov{border-color:rgba(212,168,32,.5);background:var(--gold-b)}
+.ov-lbl{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3);margin-bottom:4px}
+.ov-name{font-size:22px;font-weight:800;line-height:1.1;letter-spacing:.02em}
+.ov-name .num{color:var(--gold);margin-right:4px}
+.ov-name.is-ov{color:var(--gold)}
+.ov-meta{font-family:monospace;font-size:10px;color:var(--txt2);margin-top:3px}
+.ov-arrow{border-top:1px solid var(--border);margin:10px 0 8px;padding-top:8px;display:flex;align-items:center;gap:6px}
+.ov-arrow-icon{color:var(--txt3);font-size:11px}
 
-.ov-label { font-size: 9px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--txt3); margin-bottom: 4px; }
-.ov-name { font-size: 21px; font-weight: 700; line-height: 1.1; }
-.ov-name .num { color: var(--gold); margin-right: 4px; }
-.ov-name.is-ov { color: var(--gold); }
-.ov-meta { font-family: monospace; font-size: 10px; color: var(--txt2); margin-top: 3px; }
-
-.ov-arrow-row {
-  display: flex; align-items: center; gap: 6px;
-  margin: 10px 0 6px; padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-.ov-arrow { color: var(--txt3); font-size: 12px; }
-
-/* save controls */
-.save-note {
-  font-size: 11px; color: var(--txt3); line-height: 1.55;
-  margin-bottom: 10px; font-family: var(--body);
-}
-.save-note b { color: var(--txt2); font-weight: 500; }
-.save-note code { font-family: monospace; color: var(--gold); font-size: 10px; }
+/* save note */
+.save-note{font-size:11px;color:var(--txt3);line-height:1.6;margin-bottom:10px;font-family:var(--body)}
+.save-note b{color:var(--txt2);font-weight:500}
+.save-note code{font-family:monospace;font-size:10px;color:var(--gold)}
 
 /* stats */
-.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 3px; }
-.stat-cell {
-  background: var(--s2); border: 1px solid var(--border);
-  border-radius: 3px; padding: 5px 6px; text-align: center;
-}
-.stat-cell .v { font-size: 17px; font-weight: 700; line-height: 1; }
-.stat-cell .k { font-family: monospace; font-size: 8px; color: var(--txt3); margin-top: 2px; letter-spacing: 0.06em; }
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.stat-cell{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:5px 6px;text-align:center}
+.stat-cell .v{font-size:17px;font-weight:700;line-height:1}
+.stat-cell .k{font-family:monospace;font-size:8px;color:var(--txt3);margin-top:2px;letter-spacing:.05em}
+.game-row{display:flex;gap:3px}
+.game-row .stat-cell{flex:1}
 
-/* game stats */
-.game-stat-row { display: flex; gap: 3px; margin-bottom: 3px; }
-.game-stat-row .stat-cell { flex: 1; }
-
-/* ── MAIN ────────────────────────────────────────────────────────────────── */
-.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
 /* team headers */
-.team-headers {
-  display: grid; grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0; background: var(--s1);
+.team-headers{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid var(--border);flex-shrink:0;
 }
-.th {
-  padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+.th{
+  padding:0;display:flex;flex-direction:column;overflow:hidden;
+  position:relative;
 }
-.th:first-child { border-right: 1px solid var(--border); }
-.th-id { font-size: 28px; font-weight: 700; letter-spacing: 0.05em; line-height: 1; }
-.th-id.guest { color: var(--sky); }
-.th-id.home  { color: var(--green); }
-.th-meta { flex: 1; min-width: 0; }
-.th-name   { font-size: 13px; font-weight: 500; color: var(--txt2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.th-record { font-family: monospace; font-size: 10px; color: var(--txt3); margin-top: 1px; }
-.th-badge {
-  margin-left: auto; font-family: monospace; font-size: 9px;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 3px 8px; border-radius: 3px; flex-shrink: 0;
-}
-.th-badge.up   { background: var(--green-d); color: var(--green); border: 1px solid rgba(39,168,90,0.3); }
-.th-badge.down { background: var(--s2); color: var(--txt3); border: 1px solid var(--border); }
+.th:first-child{border-right:1px solid var(--border)}
 
-/* column headers */
-.col-headers {
-  display: grid; grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+.th-colorbar{
+  height:3px;width:100%;
+  background:var(--tc-guest);
+  transition:background .4s;
 }
-.col-hd {
-  display: flex; align-items: center;
-  padding: 5px 12px; gap: 0;
-  font-family: monospace; font-size: 9px; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--txt3);
+.th:last-child .th-colorbar{background:var(--tc-home)}
+
+.th-inner{display:flex;align-items:center;padding:8px 14px;gap:10px}
+.th-id{
+  font-size:32px;font-weight:800;letter-spacing:.04em;line-height:1;
+  color:var(--tc-guest);transition:color .4s;
 }
-.col-hd:first-child { border-right: 1px solid var(--border); }
-.chd-spot { width: 22px; flex-shrink: 0; }
-.chd-uni  { width: 32px; flex-shrink: 0; }
-.chd-name { flex: 1; }
-.chd-pos  { width: 32px; text-align: center; flex-shrink: 0; }
-.chd-avg  { width: 38px; text-align: right; flex-shrink: 0; }
-.chd-ab   { width: 28px; text-align: right; flex-shrink: 0; }
-.chd-h    { width: 24px; text-align: right; flex-shrink: 0; }
-.chd-rbi  { width: 28px; text-align: right; flex-shrink: 0; }
+.th:last-child .th-id{color:var(--tc-home)}
+.th-meta{flex:1;min-width:0}
+.th-name{font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th-record{font-family:monospace;font-size:10px;color:var(--txt3);margin-top:1px}
+.th-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+
+.batting-badge{
+  font-family:monospace;font-size:9px;letter-spacing:.09em;text-transform:uppercase;
+  padding:3px 8px;border-radius:3px;
+}
+.batting-badge.up{color:var(--green);background:var(--green-d);border:1px solid rgba(37,168,90,.3)}
+.batting-badge.dn{color:var(--txt3);background:var(--s2);border:1px solid var(--border)}
+
+/* color picker row */
+.color-row{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px 8px;
+}
+.color-swatch{
+  width:20px;height:20px;border-radius:3px;border:1px solid var(--border2);
+  cursor:pointer;flex-shrink:0;transition:transform .1s;position:relative;overflow:hidden;
+}
+.color-swatch:hover{transform:scale(1.15)}
+.color-swatch input[type=color]{
+  position:absolute;inset:0;width:200%;height:200%;
+  opacity:0;cursor:pointer;top:-50%;left:-50%;
+}
+.color-match-status{
+  font-family:monospace;font-size:9px;color:var(--txt3);letter-spacing:.04em;
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.color-match-status.matched{color:var(--green)}
+.color-match-status.manual{color:var(--gold)}
+.color-match-status.loading{color:var(--txt3)}
+
+/* column labels */
+.col-labels{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.col-label{
+  display:flex;align-items:center;padding:4px 12px;
+  font-family:monospace;font-size:9px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt3);
+}
+.col-label:first-child{border-right:1px solid var(--border)}
+.cl-spot{width:22px;flex-shrink:0}
+.cl-uni{width:34px;flex-shrink:0}
+.cl-name{flex:1}
+.cl-pos{width:30px;text-align:center;flex-shrink:0}
+.cl-avg{width:36px;text-align:right;flex-shrink:0}
+.cl-ab{width:26px;text-align:right;flex-shrink:0}
+.cl-h{width:22px;text-align:right;flex-shrink:0}
+.cl-rbi{width:26px;text-align:right;flex-shrink:0}
 
 /* lineups */
-.lineups { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow-y: auto; }
-.lineup-col { overflow-y: auto; }
-.lineup-col:first-child { border-right: 1px solid var(--border); }
-.lineup-inner { padding: 5px; display: flex; flex-direction: column; gap: 2px; }
+.lineups{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow-y:auto}
+.lineup-col{overflow-y:auto}
+.lineup-col:first-child{border-right:1px solid var(--border)}
+.lineup-inner{padding:5px;display:flex;flex-direction:column;gap:2px}
 
 /* batter row */
-.br {
-  display: flex; align-items: center;
-  border: 1px solid transparent; border-radius: 3px;
-  cursor: pointer; position: relative; overflow: hidden;
-  transition: background 0.1s, border-color 0.1s;
-  user-select: none;
+.br{
+  display:flex;align-items:center;
+  border:1px solid transparent;border-radius:3px;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:background .1s,border-color .1s;user-select:none;
 }
-.br:hover { background: var(--s3); border-color: var(--border2); }
-.br.at-bat {
-  background: var(--green-d); border-color: rgba(39,168,90,0.3);
-}
-.br.selected {
-  background: var(--gold-d); border-color: rgba(212,160,23,0.55);
-}
-.br.at-bat.selected {
-  background: var(--gold-d); border-color: rgba(212,160,23,0.55);
-}
+.br:hover{background:var(--s3);border-color:var(--border2)}
 
-.br-indicator {
-  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-}
-.at-bat   .br-indicator { background: var(--green); }
-.selected .br-indicator { background: var(--gold); }
+/* at-bat: use team color via inline style --rc */
+.br.at-bat{border-color:var(--row-color,rgba(37,168,90,.35));background:color-mix(in srgb,var(--row-color,var(--green)) 12%,transparent)}
+.br.selected{border-color:rgba(212,168,32,.6);background:var(--gold-d)}
+.br.at-bat.selected{border-color:rgba(212,168,32,.6);background:var(--gold-d)}
 
-.br-spot {
-  width: 22px; text-align: center; flex-shrink: 0;
-  font-family: monospace; font-size: 10px; color: var(--txt3);
-  padding: 9px 0;
-}
-.br-uni {
-  width: 32px; text-align: center; flex-shrink: 0;
-  font-family: monospace; font-size: 12px; font-weight: 500;
-  color: var(--gold);
-}
-.br-name-block { flex: 1; padding: 7px 3px; min-width: 0; }
-.br-name {
-  font-size: 16px; font-weight: 600; letter-spacing: 0.02em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  line-height: 1.2;
-}
-.br-pos  { font-family: monospace; font-size: 9px; color: var(--txt3); margin-top: 1px; }
+.br-bar{position:absolute;left:0;top:0;bottom:0;width:3px}
+.at-bat .br-bar{background:var(--row-color,var(--green))}
+.selected .br-bar{background:var(--gold)}
 
-.br-stats {
-  display: flex; gap: 0; flex-shrink: 0;
-  padding-right: 8px;
-}
-.brs { width: 28px; text-align: right; padding: 0 2px; }
-.brs .sv { font-size: 13px; font-weight: 600; line-height: 1.2; }
-.brs .sk { font-family: monospace; font-size: 8px; color: var(--txt3); }
-
-.br-atbat-tag {
-  position: absolute; right: 0; top: 0; bottom: 0;
-  width: 3px; background: var(--green);
-  display: none;
-}
-.at-bat .br-atbat-tag { display: block; }
-
-.sub-tag {
-  font-family: monospace; font-size: 8px; letter-spacing: 0.05em;
-  padding: 1px 4px; border-radius: 2px; margin-right: 6px; flex-shrink: 0;
-  background: var(--s1); color: var(--txt3); border: 1px solid var(--border);
-}
+.br-spot{width:22px;text-align:center;font-family:monospace;font-size:10px;color:var(--txt3);padding:9px 0;flex-shrink:0}
+.br-uni{width:34px;text-align:center;font-family:monospace;font-size:13px;font-weight:600;color:var(--gold);flex-shrink:0}
+.br-info{flex:1;padding:7px 3px;min-width:0}
+.br-name{font-size:16px;font-weight:700;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.br-pos{font-family:monospace;font-size:9px;color:var(--txt3);margin-top:1px}
+.br-stats{display:flex;gap:0;flex-shrink:0;padding-right:7px}
+.brs{width:26px;text-align:right;padding:0 2px}
+.brs .sv{font-size:13px;font-weight:700;line-height:1.2}
+.brs .sk{font-family:monospace;font-size:8px;color:var(--txt3)}
+.sub-tag{font-family:monospace;font-size:8px;padding:1px 4px;border-radius:2px;background:var(--s1);color:var(--txt3);border:1px solid var(--border);margin-right:6px;flex-shrink:0}
 
 /* empty */
-.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--txt3); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; grid-column: 1/-1; }
+.empty-main{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--txt3);font-size:13px;letter-spacing:.06em;text-transform:uppercase;grid-column:1/-1}
 
-/* ── STATUSBAR ───────────────────────────────────────────────────────────── */
-.statusbar {
-  height: 30px; flex-shrink: 0;
-  border-top: 1px solid var(--border);
-  background: var(--s1);
-  display: flex; align-items: center;
-  padding: 0 14px; gap: 18px;
+/* ── STATUSBAR ── */
+.statusbar{
+  height:28px;flex-shrink:0;border-top:1px solid var(--border);
+  background:var(--s1);display:flex;align-items:center;
+  padding:0 14px;gap:16px;
 }
-.sb-fi { font-family: monospace; font-size: 10px; color: var(--txt3); }
-.sb-fi span { color: var(--txt2); }
-.sb-sep { flex: 1; }
-.sb-ov { font-family: monospace; font-size: 10px; color: var(--gold); display: none; }
+.sfi{font-family:monospace;font-size:10px;color:var(--txt3)}
+.sfi span{color:var(--txt2)}
+.sfi.ov-active{color:var(--gold);display:none}
 
-/* ── TOAST ───────────────────────────────────────────────────────────────── */
-.toast {
-  position: fixed; bottom: 44px; left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  background: var(--s2); border: 1px solid var(--border2);
-  font-family: monospace; font-size: 11px;
-  padding: 8px 16px; border-radius: 3px;
-  opacity: 0; pointer-events: none;
-  transition: all 0.18s; z-index: 999;
-  white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+/* ── IFRAME BANNER ── */
+.iframe-banner{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(14,16,20,.96);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
 }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.ok   { border-color: rgba(39,168,90,0.5);  color: var(--green); }
-.toast.warn { border-color: rgba(212,160,23,0.5); color: var(--gold); }
-.toast.err  { border-color: rgba(201,64,64,0.5);  color: var(--red); }
+.ib-box{
+  background:var(--s2);border:1px solid rgba(212,168,32,.4);
+  border-radius:6px;padding:34px 38px;max-width:460px;text-align:center;
+}
+.ib-box h2{font-size:17px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.ib-box p{font-family:var(--body);font-size:13px;color:var(--txt2);line-height:1.65;margin-bottom:20px}
+.ib-box code{font-family:monospace;font-size:11px;color:var(--gold);background:var(--s3);padding:2px 6px;border-radius:3px}
+.ib-open{display:inline-block;background:var(--gold);color:#000;font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:10px 24px;border-radius:4px;cursor:pointer;border:none;transition:filter .13s}
+.ib-open:hover{filter:brightness(1.1)}
+.ib-dismiss{display:block;margin-top:12px;font-family:monospace;font-size:10px;color:var(--txt3);cursor:pointer;letter-spacing:.05em}
+.ib-dismiss:hover{color:var(--txt2)}
 
-/* ── IFRAME WARNING BANNER ───────────────────────────────────────────────── */
-.iframe-banner {
-  position: fixed; inset: 0; z-index: 9999;
-  background: rgba(12,14,18,0.96);
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:40px;left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:var(--s2);border:1px solid var(--border2);
+  font-family:monospace;font-size:11px;
+  padding:8px 16px;border-radius:3px;
+  opacity:0;pointer-events:none;transition:all .18s;z-index:9998;
+  white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;
 }
-.iframe-banner-box {
-  background: var(--s2);
-  border: 1px solid rgba(212,160,23,0.5);
-  border-radius: 6px;
-  padding: 36px 40px;
-  max-width: 480px;
-  text-align: center;
-}
-.iframe-banner-box h2 {
-  font-size: 18px; font-weight: 700; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
-}
-.iframe-banner-box p {
-  font-family: var(--body); font-size: 13px; color: var(--txt2);
-  line-height: 1.65; margin-bottom: 20px;
-}
-.iframe-banner-box code {
-  font-family: monospace; font-size: 11px;
-  color: var(--gold); background: var(--s3);
-  padding: 2px 6px; border-radius: 3px;
-}
-.iframe-banner-box .open-btn {
-  display: inline-block;
-  background: var(--gold); color: #000;
-  font-family: var(--cond); font-size: 13px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 10px 24px; border-radius: 4px;
-  cursor: pointer; border: none; text-decoration: none;
-  transition: filter 0.13s;
-}
-.iframe-banner-box .open-btn:hover { filter: brightness(1.1); }
-.iframe-banner-box .dismiss {
-  display: block; margin-top: 14px;
-  font-family: monospace; font-size: 10px; color: var(--txt3);
-  cursor: pointer; letter-spacing: 0.06em;
-}
-.iframe-banner-box .dismiss:hover { color: var(--txt2); }
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(37,168,90,.5);color:var(--green)}
+.toast.warn{border-color:rgba(212,168,32,.5);color:var(--gold)}
+.toast.err{border-color:rgba(196,58,58,.5);color:var(--red)}
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
 
-<!-- IFRAME WARNING — shown when not running as top-level page -->
-<div class="iframe-banner" id="iframeBanner" style="display:none;">
-  <div class="iframe-banner-box">
+<!-- IFRAME WARNING -->
+<div class="iframe-banner" id="iframeBanner" style="display:none">
+  <div class="ib-box">
     <h2>⚠ Open as Standalone Page</h2>
-    <p>
-      This tool uses the browser's <code>File System Access API</code> to write directly to <code>test.xml</code> on disk — no download prompt, no manual copy.<br><br>
-      That API is blocked inside embedded previews. To use it, open this file directly in Chrome as its own tab.
-    </p>
-    <button class="open-btn" onclick="openSelf()">Open in New Tab</button>
-    <span class="dismiss" onclick="hideBanner()">Dismiss — I'll use the paste / download fallback instead</span>
+    <p>This tool writes directly to <code>test.xml</code> on disk using the browser's File System Access API — which requires running as a top-level page in Chrome, not inside an embedded preview.</p>
+    <button class="ib-open" onclick="window.open(window.location.href,'_blank')">Open in New Tab</button>
+    <span class="ib-dismiss" onclick="document.getElementById('iframeBanner').style.display='none'">Dismiss — use paste / download fallback instead</span>
   </div>
 </div>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <span class="topbar-title">Batter Override</span>
-  <span class="topbar-sub">StatBroadcast → Daktronics Scoreboard Intercept</span>
-  <div class="topbar-sep"></div>
+  <span class="topbar-title">Dak Override</span>
+  <div class="topbar-divider"></div>
+  <span class="topbar-sub">StatBroadcast → Daktronics Scoreboard</span>
+  <div class="flex1"></div>
   <div class="pill" id="pill"><div class="dot"></div><span id="pillTxt">No file loaded</span></div>
 </div>
 
@@ -400,126 +321,134 @@ input[type=file] { display: none; }
   <!-- ── SIDEBAR ── -->
   <div class="sidebar">
 
-    <!-- FILE LOAD -->
+    <!-- FILE -->
     <div class="sb">
       <div class="sb-hd">Source — test.xml</div>
-      <div class="file-row">
-        <input class="finput" id="pathInput" placeholder="click Load to pick test.xml" readonly>
-        <button class="btn b-blue" onclick="onLoad()">Load</button>
-      </div>
+      <input class="finput" id="pathInput" placeholder="click Load to pick test.xml" readonly>
       <div class="btn-row">
+        <button class="btn b-blue" onclick="doLoad()">Load</button>
         <button class="btn b-ghost" id="reloadBtn" onclick="doReload()" disabled>↺ Reload</button>
-        <button class="btn b-ghost" onclick="togglePaste()">Paste XML</button>
+        <button class="btn b-ghost" onclick="togglePaste()">Paste</button>
       </div>
-      <div class="paste-area" id="pasteArea">
+      <div class="paste-wrap" id="pasteWrap">
         <textarea id="pasteBox" placeholder="Paste StatBroadcast XML here…"></textarea>
-        <button class="btn b-blue" style="width:100%;" onclick="doPaste()">Parse</button>
+        <button class="btn b-blue" style="width:100%" onclick="doPaste()">Parse</button>
       </div>
     </div>
 
-    <!-- OVERRIDE STATUS -->
+    <!-- OVERRIDE CARD -->
     <div class="sb">
       <div class="sb-hd">Current Batter Override</div>
       <div class="ov-card" id="ovCard">
-
-        <div class="ov-label">Now Batting (from live half-inning)</div>
+        <div class="ov-lbl">Now Batting</div>
         <div class="ov-name" id="ovDetected">—</div>
         <div class="ov-meta" id="ovDetectedMeta">load test.xml to begin</div>
-
-        <div id="ovTargetBlock" style="display:none;">
-          <div class="ov-arrow-row">
-            <div class="ov-arrow">▼</div>
-            <div class="ov-label" style="margin:0;">Replacing with</div>
-          </div>
+        <div class="ov-arrow" id="ovArrow" style="display:none">
+          <span class="ov-arrow-icon">▼</span>
+          <div class="ov-lbl" style="margin:0">Replacing with</div>
+        </div>
+        <div id="ovTargetWrap" style="display:none">
           <div class="ov-name is-ov" id="ovTarget">—</div>
           <div class="ov-meta" id="ovTargetMeta"></div>
         </div>
-
       </div>
     </div>
 
-    <!-- SAVE / RESTORE -->
+    <!-- SAVE -->
     <div class="sb">
       <div class="sb-hd">Output → test.xml</div>
       <p class="save-note">
-        Load <code>test.xml</code> via the picker above — the page holds a write handle to that exact file. <b>Save Override</b> and <b>Clear &amp; Restore</b> both overwrite it in place with no download prompt.<br><br>
-        The ↓ button is always available as a manual download fallback.
+        Load <code>test.xml</code> via the picker — the page holds a write handle. <b>Save Override</b> overwrites it in place instantly. <b>Clear</b> restores the original feed.
       </p>
-      <div class="btn-row" style="margin-bottom:5px;">
-        <button class="btn b-gold" id="saveBtn" onclick="doSave()" disabled>▶ Save Override → test.xml</button>
-      </div>
+      <button class="btn b-gold" id="saveBtn" onclick="doSave()" disabled style="width:100%;margin-bottom:5px">▶ Save Override → test.xml</button>
       <div class="btn-row">
-        <button class="btn b-red"   id="clearBtn"  onclick="doClear()"    disabled>✕ Clear &amp; Restore</button>
-        <button class="btn b-ghost" id="dlBtn"     onclick="doDL()"       disabled style="flex:0 0 auto;padding:6px 9px;">↓</button>
+        <button class="btn b-red" id="clearBtn" onclick="doClear()" disabled>✕ Clear &amp; Restore</button>
+        <button class="btn b-ghost" id="dlBtn" onclick="doDL()" disabled style="flex:0 0 auto;padding:6px 9px">↓</button>
       </div>
     </div>
 
-    <!-- SEASON STATS for active batter -->
-    <div class="sb" id="seasonSection" style="display:none;">
-      <div class="sb-hd" id="seasonHd">Season Stats</div>
-      <div class="stat-grid" id="seasonGrid"></div>
+    <!-- SEASON STATS -->
+    <div class="sb" id="secSeason" style="display:none">
+      <div class="sb-hd" id="hdSeason">Season Stats</div>
+      <div class="stat-grid" id="gridSeason"></div>
     </div>
 
-    <!-- GAME STATS for active batter -->
-    <div class="sb" id="gameStatSection" style="display:none;">
-      <div class="sb-hd" id="gameStatHd">Today</div>
-      <div class="game-stat-row" id="gameStatRow"></div>
+    <!-- TODAY -->
+    <div class="sb" id="secToday" style="display:none">
+      <div class="sb-hd" id="hdToday">Today</div>
+      <div class="game-row" id="gridToday"></div>
     </div>
 
   </div>
 
-  <!-- ── MAIN LINEUPS ── -->
+  <!-- ── MAIN ── -->
   <div class="main">
 
     <!-- team headers -->
-    <div class="team-headers" id="teamHeaders" style="display:none;">
-      <div class="th">
-        <div class="th-id guest" id="gId">VIS</div>
-        <div class="th-meta">
-          <div class="th-name"   id="gName">Visitor</div>
-          <div class="th-record" id="gRecord"></div>
+    <div class="team-headers" id="teamHeaders" style="display:none">
+      <!-- GUEST -->
+      <div class="th" id="thGuest">
+        <div class="th-colorbar" id="cbGuest"></div>
+        <div class="th-inner">
+          <div class="th-id" id="gId">VIS</div>
+          <div class="th-meta">
+            <div class="th-name" id="gName">Visitor</div>
+            <div class="th-record" id="gRecord"></div>
+          </div>
+          <div class="th-right">
+            <div class="batting-badge dn" id="gBadge">FIELDING</div>
+          </div>
         </div>
-        <div class="th-badge down" id="gBadge">FIELDING</div>
+        <div class="color-row">
+          <div class="color-swatch" id="swatchGuest" style="background:#4a8fd4">
+            <input type="color" id="pickerGuest" value="#4a8fd4" oninput="onColorPick('V',this.value)">
+          </div>
+          <span class="color-match-status loading" id="matchGuest">—</span>
+        </div>
       </div>
-      <div class="th">
-        <div class="th-id home" id="hId">HOME</div>
-        <div class="th-meta">
-          <div class="th-name"   id="hName">Home</div>
-          <div class="th-record" id="hRecord"></div>
+      <!-- HOME -->
+      <div class="th" id="thHome">
+        <div class="th-colorbar" id="cbHome"></div>
+        <div class="th-inner">
+          <div class="th-id" id="hId">HOME</div>
+          <div class="th-meta">
+            <div class="th-name" id="hName">Home</div>
+            <div class="th-record" id="hRecord"></div>
+          </div>
+          <div class="th-right">
+            <div class="batting-badge dn" id="hBadge">FIELDING</div>
+          </div>
         </div>
-        <div class="th-badge down" id="hBadge">FIELDING</div>
+        <div class="color-row">
+          <div class="color-swatch" id="swatchHome" style="background:#25a85a">
+            <input type="color" id="pickerHome" value="#25a85a" oninput="onColorPick('H',this.value)">
+          </div>
+          <span class="color-match-status loading" id="matchHome">—</span>
+        </div>
       </div>
     </div>
 
-    <!-- column headers -->
-    <div class="col-headers" id="colHeaders" style="display:none;">
-      <div class="col-hd">
-        <div class="chd-spot">#</div>
-        <div class="chd-uni">UNI</div>
-        <div class="chd-name">NAME</div>
-        <div class="chd-pos">POS</div>
-        <div class="chd-avg">AVG</div>
-        <div class="chd-ab">AB</div>
-        <div class="chd-h">H</div>
-        <div class="chd-rbi">RBI</div>
+    <!-- col labels -->
+    <div class="col-labels" id="colLabels" style="display:none">
+      <div class="col-label">
+        <div class="cl-spot">#</div><div class="cl-uni">UNI</div>
+        <div class="cl-name">NAME</div><div class="cl-pos">POS</div>
+        <div class="cl-avg">AVG</div><div class="cl-ab">AB</div>
+        <div class="cl-h">H</div><div class="cl-rbi">RBI</div>
       </div>
-      <div class="col-hd">
-        <div class="chd-spot">#</div>
-        <div class="chd-uni">UNI</div>
-        <div class="chd-name">NAME</div>
-        <div class="chd-pos">POS</div>
-        <div class="chd-avg">AVG</div>
-        <div class="chd-ab">AB</div>
-        <div class="chd-h">H</div>
-        <div class="chd-rbi">RBI</div>
+      <div class="col-label">
+        <div class="cl-spot">#</div><div class="cl-uni">UNI</div>
+        <div class="cl-name">NAME</div><div class="cl-pos">POS</div>
+        <div class="cl-avg">AVG</div><div class="cl-ab">AB</div>
+        <div class="cl-h">H</div><div class="cl-rbi">RBI</div>
       </div>
     </div>
 
     <!-- lineups -->
     <div class="lineups" id="lineups">
-      <div class="empty" style="grid-column:1/-1;">
-        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" opacity="0.25">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+      <div class="empty-main">
+        <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" opacity="0.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
         Load test.xml to display lineups
       </div>
@@ -528,133 +457,195 @@ input[type=file] { display: none; }
   </div>
 </div>
 
-<!-- STATUS BAR -->
+<!-- STATUSBAR -->
 <div class="statusbar">
-  <div class="sb-fi">File: <span id="sfFile">—</span></div>
-  <div class="sb-fi">Inn: <span id="sfInn">—</span></div>
-  <div class="sb-fi">Outs: <span id="sfOuts">—</span></div>
-  <div class="sb-fi">B-S: <span id="sfBS">—</span></div>
-  <div class="sb-fi">Batting: <span id="sfBatting">—</span></div>
-  <div class="sb-sep"></div>
-  <div class="sb-ov" id="sfOv">⚡ OVERRIDE ACTIVE</div>
-  <div class="sb-fi" id="sfSaved"></div>
-  <div class="sb-fi" style="color:var(--txt3);">↺ <span id="sfRefresh">no file loaded</span></div>
+  <div class="sfi">File: <span id="sfFile">—</span></div>
+  <div class="sfi">Inn: <span id="sfInn">—</span></div>
+  <div class="sfi">Outs: <span id="sfOuts">—</span></div>
+  <div class="sfi">B-S: <span id="sfBS">—</span></div>
+  <div class="sfi">Batting: <span id="sfBatting">—</span></div>
+  <div class="flex1"></div>
+  <div class="sfi ov-active" id="sfOv">⚡ OVERRIDE ACTIVE</div>
+  <div class="sfi" id="sfSaved"></div>
+  <div class="sfi" style="color:var(--txt3)">↺ <span id="sfRefresh">—</span></div>
 </div>
 
 <script>
 'use strict';
 
-// ── STATE ─────────────────────────────────────────────────────────────────
-let rawXML         = '';
-let fileHandle     = null;   // FileSystemFileHandle — retained for in-place writes
-let game           = null;
-let detectedBatter = null;   // player obj of XML-detected current batter
-let overridePick   = null;   // player obj the operator has selected
+// ── TEAM COLOR CATALOG ─────────────────────────────────────────────────────
+// All 364 filenames from JaysVideo/teamcolors (without .jpg)
+const COLOR_BASE = 'https://raw.githubusercontent.com/JaysVideo/teamcolors/main/Colors/';
+const TEAM_CATALOG = ["BYU","GONZAGA","LOYOLA MARYMOUNT","PACIFIC","PEPPERDINE","PORTLAND","SAINT MARYS","SAN DIEGO","SAN FRANCISCO","SANTA CLARA","APPALACHIAN STATE","ARKANSAS LITTLE ROCK","ARKANSAS STATE","COASTAL CAROLINA","GEORGIA SOUTHERN","GEORGIA STATE","HAMPTON","LOUISIANA MONROE","LOUISIANA","SOUTH ALABAMA","TEXAS ARLINGTON","TEXAS STATE","TROY","AIR FORCE FALCONS","BOISE STATE BRONCOS","COLORADO STATE RAMS","FRESNO STATE BULLDOGS","HAWAII RAINBOW WARRIORS","NEVADA WOLF PACK","NEW MEXICO LOBOS","SAN DIEGO STATE AZTECS","SAN JOSE STATE SPARTANS","UNLV REBELS","UTAH STATE AGGIES","WYOMING COWBOYS","BRYANT BULLDOGS","CENTRAL CONNECTICUT BLUE DEVILS","FAIRLEIGH DICKINSON KNIGHTS","LONG ISLAND SHARKS","MERRIMACK WARRIORS","MOUNT ST MARYS MOUNTAINEERS","ROBERT MORRIS COLONIALS","SACRED HEART PIONEERS","ST FRANCIS BROOKLYN TERRIERS","ST FRANCIS PA RED FLASH","WAGNER SEAHAWKS","DENVER PIONEERS","NDSU BISON","NORTH DAKOTA FIGHTING HAWKS","OMAHA MAVERICKS","ORAL ROBERTS GOLDEN EAGLES","PURDUE FORT WAYNE MASTODONS","SOUTH DAKOTA COYOTES","SOUTH DAKOTA STATE JACKRABBITS","WESTERN ILLINOIS LEATHERNECKS","EASTERN WASHINGTON EAGLES","IDAHO STATE BENGALS","IDAHO VANDALS","MONTANA GRIZZLIES","MONTANA STATE BOBCATS","NORTHERN ARIZONA LUMBERJACKS","NORTHERN COLORADO BEARS","PORTLAND STATE VIKINGS","SACRAMENTO STATE HORNETS","SOUTHERN UTAH THUNDERBIRDS","WEBER STATE WILDCATS","CALIFORNIA BAPTIST LANCERS","CHICAGO STATE COUGARS","CSU BAKERSFIELD ROADRUNNERS","GRAND CANYON ANTELOPES","KANSAS CITY ROOS","NEW MEXICO STATE AGGIES","SEATTLE","UTAH VALLEY WOLVERINES","UTRGV VAQUEROS","ALABAMA A&M BULLDOGS","ALABAMA STATE HORNETS","ALCORN STATE BRAVES","ARKANSAS-PINE BLUFF GOLDEN LIONS","GRAMBLING TIGERS","JACKSON STATE TIGERS","MISSISSIPPI VALLEY STATE DELTA DEVILS","PRAIRIE VIEW A&M PANTHERS","SOUTHERN JAGUARS","TEXAS SOUTHERN TIGERS","ABILENE CHRISTIAN WILDCATS","CENTRAL ARKANSAS BEARS","HOUSTON BAPTIST HUSKIES","INCARNATE WORD CARDINALS","LAMAR CARDINALS","MCNEESE COWBOYS","NEW ORLEANS PRIVATEERS","NICHOLLS","NORTHWESTERN STATE","SAM HOUSTON STATE BEARKATS","SE LOUISIANA LIONS","STEPHEN F. AUSTIN LUMBERJACKS","TEXAS A&M-CC ISLANDERS","CHATTANOOGA MOCS","CITADEL BULLDOGS","ETSU BUCCANEERS","FURMAN PALADINS","MERCER BEARS","SAMFORD BULLDOGS","UNC GREENSBORO SPARTANS","VMI KEYDETS","WESTERN CAROLINA CATAMOUNTS","WOFFORD TERRIERS","BRADLEY","DRAKE","EVANSVILLE","ILLINOIS STATE","INDIANA STATE","MISSOURI STATE","NORTHERN IOWA","SOUTHERN ILLINOIS","VALPARAISO","ALABAMA","ARKANSAS","AUBURN","FLORIDA","GEORGIA","KENTUCKY","LSU","MISSISSIPPI STATE","MISSOURI","OLE MISS","SOUTH CAROLINA","TENNESSEE","TEXAS A&M","VANDERBILT","AMERICAN","ARMY","BOSTON UNIVERSITY","BUCKNELL","COLGATE","HOLY CROSS","LAFAYETTE","LEHIGH","LOYOLA (MD)","ARIZONA STATE","ARIZONA","CALIFORNIA","COLORADO","OREGON STATE","OREGON","STANFORD","UCLA","USC","UTAH","WASHINGTON STATE","WASHINGTON","BELMONT","EASTERN ILLINOIS","JACKSONVILLE STATE","MOREHEAD STATE","MURRAY STATE","SE MISSOURI STATE","SIUE","TENNESSEE STATE","TENNESSEE TECH","UT MARTIN","COPPIN STATE","DELAWARE STATE","HOWARD","MARYLAND EASTERN SHORE","MORGAN STATE","NORFOLK STATE","NORTH CAROLINA CENTRAL","SOUTH CAROLINA STATE","AKRON","BALL STATE","BOWLING GREEN","BUFFALO","CENTRAL MICHIGAN","EASTERN MICHIGAN","KENT STATE","MIAMI OHIO","NORTHERN ILLINOIS","OHIO","TOLEDO","WESTERN MICHIGAN","CANISIUS","FAIRFIELD","IONA","MANHATTAN","MARIST","MONMOUTH","NIAGARA","QUINNIPIAC","RIDER","SAINT PETERS","SIENA","BROWN","COLUMBIA","CORNELL","DARTMOUTH","HARVARD","PENN","PRINCETON","YALE","CLEVELAND STATE","DETROIT MERCY","GREEN BAY","IUPUI","MILWAUKEE","NORTHERN KENTUCKY","OAKLAND","UIC","WRIGHT STATE","YOUNGSTOWN STATE","CHARLOTTE","FIU","FLORIDA ATLANTIC","LOUISIANA TECH","MARSHALL","MIDDLE TENNESSEE","NORTH TEXAS","OLD DOMINION","RICE","SOUTHERN MISS","UAB","UTEP","UTSA","WKU","CHARLESTON","DELAWARE","DREXEL","ELON","HOFSTRA","JAMES MADISON","NORTHEASTERN","TOWSON","UNC WILMINGTON","WILLIAM & MARY","BAYLOR","IOWA STATE","KANSAS STATE","KANSAS","OKLAHOMA STATE","OKLAHOMA","TCU","TEXAS TECH","TEXAS","WEST VIRGINIA","CAL POLY","CAL STATE FULLERTON","CSU BAKERSFIELD","CSUN","HAWAII","LONG BEACH STATE","UC DAVIS","UC IRVINE","UC RIVERSIDE","UC SAN DIEGO","UC SANTA BARBARA","CHARLESTON SOUTHERN","GARDNER-WEBB","HIGH POINT","LONGWOOD","PRESBYTERIAN","RADFORD","UNC ASHEVILLE","USC UPSTATE","WINTHROP","EASTERN WASHINGTON","IDAHO STATE","IDAHO","MONTANA STATE","MONTANA","NORTHERN ARIZONA","NORTHERN COLORADO","PORTLAND STATE","SACRAMENTO STATE","WEBER STATE","BUTLER","CREIGHTON","DEPAUL","GEORGETOWN","MARQUETTE","PROVIDENCE","SETON HALL","ST. JOHN'S","UCONN","VILLANOVA","XAVIER","DAVIDSON","DAYTON","DUQUESNE","FORDHAM","GEORGE MASON","GEORGE WASHINGTON","LA SALLE","LOYOLA CHICAGO","RHODE ISLAND","RICHMOND","SAINT JOSEPH'S","SAINT LOUIS","ST. BONAVENTURE","UMASS","VCU","AUSTIN PEAY","BELLARMINE","CENTRAL ARKANSAS","EASTERN KENTUCKY","FLORIDA GULF COAST","JACKSONVILLE","LIPSCOMB","NORTH ALABAMA","NORTH FLORIDA","QUEENS","STETSON","WEST GEORGIA","BOSTON COLLEGE","CLEMSON","DUKE","FLORIDA STATE","GEORGIA TECH","LOUISVILLE","MIAMI (FL)","NORTH CAROLINA STATE","NORTH CAROLINA","NOTRE DAME","PITTSBURGH","SYRACUSE","VIRGINIA TECH","VIRGINIA","WAKE FOREST","ALBANY","BINGHAMTON","HARTFORD","MAINE","NEW HAMPSHIRE","STONY BROOK","UMASS LOWELL","UMBC","VERMONT","CENTRAL FLORIDA","CINCINNATI","CONNECTICUT","EAST CAROLINA","HOUSTON","MEMPHIS","NAVY","SOUTH FLORIDA","SOUTHERN METHODIST","TEMPLE","TULANE","TULSA","WICHITA STATE","ILLINOIS","INDIANA","IOWA","MARYLAND","MICHIGAN STATE","MICHIGAN","MINNESOTA","NEBRASKA","NORTHWESTERN","OHIO STATE","PENN STATE","PURDUE","RUTGERS","WISCONSIN"];
 
-function openSelf() {
-  // Open this same HTML file as a top-level tab
-  const url = window.location.href;
-  window.open(url, '_blank');
+// Words to strip when fuzzy-matching
+const STRIP_WORDS = ['university','of','the','at','college','state','a&m','&'];
+
+function normalizeForMatch(s) {
+  return s.toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .split(/\s+/)
+    .filter(w => !STRIP_WORDS.includes(w.toLowerCase()))
+    .join(' ')
+    .trim();
 }
 
-// Auto-detect iframe context on load and show banner immediately
-// so the operator sees the instruction before clicking anything.
-(function detectContext() {
-  if (window.self !== window.top) {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('iframeBanner').style.display = '';
-    });
-  }
-})();
+// Returns the best catalog entry for a given team name, or null
+function fuzzyMatchTeam(xmlName) {
+  if (!xmlName) return null;
+  const q = xmlName.toUpperCase().trim();
 
-// ── FILE SYSTEM ACCESS API ────────────────────────────────────────────────
-// Uses showOpenFilePicker() so the page holds a write-capable handle.
-// Every save/clear writes directly back to the same file — no download prompt.
+  // 1. Exact match against catalog
+  if (TEAM_CATALOG.includes(q)) return q;
 
-async function onLoad() {
-  // File System Access API requires a top-level browsing context —
-  // it will not work inside an iframe (e.g. Claude.ai preview).
-  // Detect this and tell the operator clearly.
-  if (window.self !== window.top) {
-    showIframeWarning();
-    return;
+  // 2. Exact match stripping mascot words (catalog entries with mascots)
+  //    Try: does the catalog entry START WITH our query?
+  const startMatch = TEAM_CATALOG.find(c => c.startsWith(q + ' ') || c === q);
+  if (startMatch) return startMatch;
+
+  // 3. Does our query START WITH a catalog entry? (XML has mascot, catalog doesn't)
+  const revMatch = TEAM_CATALOG.find(c => q.startsWith(c + ' ') || q === c);
+  if (revMatch) return revMatch;
+
+  // 4. Normalize both and try word-overlap scoring
+  const qNorm = normalizeForMatch(xmlName);
+  const qWords = qNorm.split(' ').filter(Boolean);
+
+  let best = null, bestScore = 0;
+  for (const c of TEAM_CATALOG) {
+    const cNorm = normalizeForMatch(c);
+    const cWords = cNorm.split(' ').filter(Boolean);
+    const overlap = qWords.filter(w => cWords.includes(w)).length;
+    const score = overlap / Math.max(qWords.length, cWords.length);
+    if (score > bestScore) { bestScore = score; best = c; }
   }
-  if (!window.showOpenFilePicker) {
-    toast('showOpenFilePicker not available — use Chrome or Edge', 'err');
-    return;
-  }
+
+  // Require at least 50% word overlap to avoid bad matches
+  return bestScore >= 0.5 ? best : null;
+}
+
+// Read a 10x10 JPG from the teamcolors repo and extract the dominant color
+async function fetchTeamColor(catalogName) {
+  const url = COLOR_BASE + encodeURIComponent(catalogName) + '.jpg';
   try {
-    const [handle] = await window.showOpenFilePicker({
-      types: [{ description: 'XML Files', accept: { 'application/xml': ['.xml'], 'text/xml': ['.xml'] } }],
-      multiple: false
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    return await extractColorFromBlob(blob);
+  } catch { return null; }
+}
+
+function extractColorFromBlob(blob) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      // Sample the center pixel — 10x10 image, center is 5,5
+      const cx = Math.floor(img.width / 2);
+      const cy = Math.floor(img.height / 2);
+      const d = ctx.getImageData(cx, cy, 1, 1).data;
+      URL.revokeObjectURL(url);
+      resolve(rgbToHex(d[0], d[1], d[2]));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+function rgbToHex(r, g, b) {
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+// Apply a color to a team's UI elements
+function applyTeamColor(vh, hex) {
+  const isGuest = vh === 'V';
+  const prop    = isGuest ? '--tc-guest' : '--tc-home';
+  document.documentElement.style.setProperty(prop, hex);
+
+  const swatchId = isGuest ? 'swatchGuest' : 'swatchHome';
+  const pickerId = isGuest ? 'pickerGuest' : 'pickerHome';
+  document.getElementById(swatchId).style.background = hex;
+  document.getElementById(pickerId).value = hex;
+
+  // Also update row color variable for at-bat rows in that column
+  // We store per-column via data attributes and apply on render
+  if (isGuest) guestColor = hex; else homeColor = hex;
+  renderLineups(); // re-render rows with new color
+}
+
+function onColorPick(vh, hex) {
+  const matchEl = document.getElementById(vh === 'V' ? 'matchGuest' : 'matchHome');
+  matchEl.textContent = 'manual';
+  matchEl.className = 'color-match-status manual';
+  applyTeamColor(vh, hex);
+}
+
+async function resolveTeamColor(vh, xmlName) {
+  const matchId  = vh === 'V' ? 'matchGuest' : 'matchHome';
+  const matchEl  = document.getElementById(matchId);
+  matchEl.textContent = 'matching…';
+  matchEl.className = 'color-match-status loading';
+
+  const catalogName = fuzzyMatchTeam(xmlName);
+  if (!catalogName) {
+    matchEl.textContent = 'no match — pick manually';
+    matchEl.className = 'color-match-status manual';
+    return;
+  }
+
+  const hex = await fetchTeamColor(catalogName);
+  if (!hex) {
+    matchEl.textContent = `matched "${catalogName}" — fetch failed`;
+    matchEl.className = 'color-match-status manual';
+    return;
+  }
+
+  applyTeamColor(vh, hex);
+  const displayName = catalogName.length > 28 ? catalogName.slice(0,27)+'…' : catalogName;
+  matchEl.textContent = `✓ ${displayName}`;
+  matchEl.className = 'color-match-status matched';
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let rawXML = '', fileHandle = null, game = null;
+let detectedBatter = null, overridePick = null;
+let guestColor = '#4a8fd4', homeColor = '#25a85a';
+let autoTimer = null;
+
+// ── IFRAME DETECT ─────────────────────────────────────────────────────────
+if (window.self !== window.top) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('iframeBanner').style.display = '';
+  });
+}
+
+// ── FILE I/O ──────────────────────────────────────────────────────────────
+async function doLoad() {
+  if (window.self !== window.top) { document.getElementById('iframeBanner').style.display=''; return; }
+  if (!window.showOpenFilePicker) { toast('showOpenFilePicker not available — use Chrome/Edge','err'); return; }
+  try {
+    const [h] = await window.showOpenFilePicker({
+      types:[{description:'XML Files',accept:{'application/xml':['.xml'],'text/xml':['.xml']}}],
+      multiple:false
     });
-    fileHandle = handle;
-    document.getElementById('pathInput').value = handle.name;
+    fileHandle = h;
+    document.getElementById('pathInput').value = h.name;
     document.getElementById('reloadBtn').disabled = false;
     document.getElementById('clearBtn').disabled = false;
-    hideBanner();
+    document.getElementById('dlBtn').disabled = false;
     await readHandle();
     startAutoRefresh();
-  } catch (e) {
-    if (e.name !== 'AbortError') toast('Could not open file: ' + e.message, 'err');
-  }
-}
-
-function showIframeWarning() {
-  document.getElementById('iframeBanner').style.display = '';
-}
-function hideBanner() {
-  document.getElementById('iframeBanner').style.display = 'none';
-}
-
-// ── AUTO-REFRESH ──────────────────────────────────────────────────────────
-// Re-reads the file every 10 seconds so the operator doesn't have to
-// manually reload. Pauses while an override is active so a live save
-// doesn't get immediately stomped by a stale read.
-
-let autoRefreshTimer  = null;
-const AUTO_REFRESH_MS = 10000;
-
-function startAutoRefresh() {
-  stopAutoRefresh();
-  autoRefreshTimer = setInterval(async () => {
-    if (!fileHandle) return;
-    // Don't auto-reload while an override is actively saved —
-    // the stats operator's updated file would wipe our intercept.
-    if (overridePick) {
-      updateRefreshIndicator('paused — override active');
-      return;
-    }
-    try {
-      const file = await fileHandle.getFile();
-      const text = await file.text();
-      if (text !== rawXML) {
-        rawXML = text;
-        parseAndRender();
-        updateRefreshIndicator('updated ' + new Date().toLocaleTimeString());
-      } else {
-        updateRefreshIndicator('checked ' + new Date().toLocaleTimeString());
-      }
-    } catch(e) {
-      updateRefreshIndicator('read error — ' + e.message);
-    }
-  }, AUTO_REFRESH_MS);
-  updateRefreshIndicator('watching every 10s');
-}
-
-function stopAutoRefresh() {
-  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
-}
-
-function updateRefreshIndicator(msg) {
-  const el = document.getElementById('sfRefresh');
-  if (el) el.textContent = msg;
+  } catch(e) { if (e.name !== 'AbortError') toast('Could not open: '+e.message,'err'); }
 }
 
 async function readHandle() {
   if (!fileHandle) return;
-  const file = await fileHandle.getFile();
-  rawXML = await file.text();
+  const f = await fileHandle.getFile();
+  rawXML = await f.text();
   parseAndRender();
 }
 
@@ -662,581 +653,383 @@ async function doReload() {
   if (!fileHandle) return;
   overridePick = null;
   await readHandle();
-  toast('Reloaded from disk', 'ok');
-}
-
-// Core write — used by both doSave() and doClear()
-async function writeToHandle(content) {
-  if (!fileHandle) {
-    // No handle — fall back to download
-    triggerDL(content, 'test.xml');
-    return false;
-  }
-  // Verify we still have write permission; re-request if needed
-  let perm = await fileHandle.queryPermission({ mode: 'readwrite' });
-  if (perm !== 'granted') {
-    perm = await fileHandle.requestPermission({ mode: 'readwrite' });
-  }
-  if (perm !== 'granted') {
-    toast('Write permission denied — check browser settings', 'err');
-    return false;
-  }
-  const writable = await fileHandle.createWritable();
-  await writable.write(content);
-  await writable.close();
-  return true;
+  toast('Reloaded','ok');
 }
 
 function togglePaste() {
-  const el = document.getElementById('pasteArea');
+  const el = document.getElementById('pasteWrap');
   el.style.display = el.style.display === 'none' ? '' : 'none';
 }
 function doPaste() {
   const v = document.getElementById('pasteBox').value.trim();
   if (!v) { toast('Nothing to parse','err'); return; }
   rawXML = v; fileHandle = null;
-  document.getElementById('pathInput').value = 'pasted (no write handle)';
-  document.getElementById('pasteArea').style.display = 'none';
+  document.getElementById('pathInput').value = 'pasted';
+  document.getElementById('pasteWrap').style.display = 'none';
   overridePick = null;
   parseAndRender();
 }
 
-// ── XML PARSE ─────────────────────────────────────────────────────────────
+// ── AUTO REFRESH ──────────────────────────────────────────────────────────
+function startAutoRefresh() {
+  if (autoTimer) clearInterval(autoTimer);
+  autoTimer = setInterval(async () => {
+    if (!fileHandle) return;
+    if (overridePick) { setRefresh('paused — override active'); return; }
+    try {
+      const f = await fileHandle.getFile();
+      const txt = await f.text();
+      if (txt !== rawXML) { rawXML = txt; parseAndRender(); setRefresh('updated '+ts()); }
+      else setRefresh('checked '+ts());
+    } catch(e) { setRefresh('error: '+e.message); }
+  }, 10000);
+  setRefresh('watching every 10s');
+}
+function setRefresh(msg) { const el=document.getElementById('sfRefresh'); if(el) el.textContent=msg; }
+function ts() { return new Date().toLocaleTimeString(); }
+
+// ── PARSE ─────────────────────────────────────────────────────────────────
 function ga(str, name) {
-  const m = str.match(new RegExp('\\b' + name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '="([^"]*)"'));
+  const m = str.match(new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'="([^"]*)"'));
   return m ? m[1] : '';
 }
 
 function parseAndRender() {
   try {
     game = parseGame(rawXML);
-    overridePick = null;
+    if (!overridePick) { /* keep pick if still valid */ }
     render();
-    toast(game.visitor.name + ' @ ' + game.home.name,'ok');
-  } catch(e) {
-    toast('Parse error: ' + e.message, 'err');
-    console.error(e);
-  }
+    toast(game.visitor.name+' @ '+game.home.name,'ok');
+  } catch(e) { toast('Parse error: '+e.message,'err'); console.error(e); }
 }
 
 function parseGame(xml) {
-  const g = {
-    visitor: null, home: null,
-    inn: '?', outs: '?', battingVH: '?', seq: '?', cbName: '',
-    activeInnComplete: false
-  };
+  const g = {visitor:null,home:null,inn:'?',outs:'?',battingVH:'?',seq:'?',cbName:'',balls:'',strikes:'',pitcher:'',np:'',activeInnComplete:false};
 
-  // ── Teams & Players
+  // Teams
   const teamRx = /<team\s+([^>]+)>([\s\S]*?)<\/team>/g;
   let tm;
-  while ((tm = teamRx.exec(xml)) !== null) {
-    const ta = tm[1], tb = tm[2];
-    const vh = ga(ta,'vh');
-    const team = {
-      vh, id: ga(ta,'id'), name: ga(ta,'name'), record: ga(ta,'record'),
-      players: [], byUni: {}, byShort: {}, lineup: []
-    };
-
+  while ((tm=teamRx.exec(xml))!==null) {
+    const ta=tm[1],tb=tm[2],vh=ga(ta,'vh');
+    const team = {vh,id:ga(ta,'id'),name:ga(ta,'name'),record:ga(ta,'record'),players:[],byUni:{},byShort:{},lineup:[]};
     const pRx = /<player\s+([^>]+)>([\s\S]*?)<\/player>/g;
     let pm;
-    while ((pm = pRx.exec(tb)) !== null) {
-      const pa = pm[1], pb = pm[2];
-      const spot = parseInt(ga(pa,'spot')||'0');
-      const hitM = pb.match(/<hitting\s+([^/>\n]+)/);
-      const hsnM = pb.match(/<hitseason\s+([^/>\n]+)/);
-      const p = {
-        name:      ga(pa,'name'),
-        shortname: ga(pa,'shortname'),
-        uni:       ga(pa,'uni'),
-        spot,
-        pos:       ga(pa,'atpos') || ga(pa,'pos'),
-        bats:      ga(pa,'bats'),
-        isSub:     ga(pa,'sub') === '1',
-        gp:        ga(pa,'gp'),
-        today:     hitM ? parseSec(hitM[1]) : {},
-        season:    hsnM ? parseSec(hsnM[1]) : {},
-      };
+    while ((pm=pRx.exec(tb))!==null) {
+      const pa=pm[1],pb=pm[2];
+      const spot=parseInt(ga(pa,'spot')||'0');
+      const hitM=pb.match(/<hitting\s+([^/>\n]+)/);
+      const hsnM=pb.match(/<hitseason\s+([^/>\n]+)/);
+      const p={name:ga(pa,'name'),shortname:ga(pa,'shortname'),uni:ga(pa,'uni'),spot,pos:ga(pa,'atpos')||ga(pa,'pos'),bats:ga(pa,'bats'),isSub:ga(pa,'sub')==='1',today:hitM?parseSec(hitM[1]):{},season:hsnM?parseSec(hsnM[1]):{}};
       team.players.push(p);
-      if (p.uni)       team.byUni[p.uni]         = p;
-      if (p.shortname) team.byShort[p.shortname]  = p;
+      if(p.uni) team.byUni[p.uni]=p;
+      if(p.shortname) team.byShort[p.shortname]=p;
     }
-
-    const bySpot = {};
-    for (const p of team.players) {
-      if (p.spot > 0) {
-        if (!bySpot[p.spot] || p.isSub) bySpot[p.spot] = p;
-      }
-    }
-    team.lineup = Object.values(bySpot).sort((a,b) => a.spot - b.spot);
-    if (vh === 'V') g.visitor = team;
-    else            g.home    = team;
+    const bySpot={};
+    for(const p of team.players) if(p.spot>0&&(!bySpot[p.spot]||p.isSub)) bySpot[p.spot]=p;
+    team.lineup=Object.values(bySpot).sort((a,b)=>a.spot-b.spot);
+    if(vh==='V') g.visitor=team; else g.home=team;
   }
 
-  // ── Current batter detection
-  //
-  // PRIMARY SOURCE: <status> element — StatBroadcast maintains this in
-  // real time with the current batter, inning, outs, bases, B/S/NP.
-  // This is the ground truth, not the play-by-play log.
-  //
-  // FALLBACK: last <play> in the active (no <innsummary>) half-inning block.
-
-  const statusMatch = xml.match(/<status\s+([^>]+)>/);
-  if (statusMatch) {
-    const sa = statusMatch[1];
-    const complete = ga(sa, 'complete');
-
-    if (complete !== 'Y') {
-      // Live game — status is authoritative
-      g.cbName    = ga(sa, 'batter');
-      g.battingVH = ga(sa, 'vh');
-      g.inn       = ga(sa, 'inning');
-      g.outs      = ga(sa, 'outs');
-      g.balls     = ga(sa, 'b');
-      g.strikes   = ga(sa, 's');
-      g.pitcher   = ga(sa, 'pitcher');
-      g.onFirst   = ga(sa, 'first');
-      g.onSecond  = ga(sa, 'second');
-      g.onThird   = ga(sa, 'third');
-      g.vup       = ga(sa, 'vup');   // visitor next batter spot
-      g.hup       = ga(sa, 'hup');   // home next batter spot
-      g.np        = ga(sa, 'np');    // pitcher pitch count
-      g.activeInnComplete = false;
+  // Status element — primary source
+  const sm=xml.match(/<status\s+([^>]+)>/);
+  if(sm) {
+    const sa=sm[1];
+    if(ga(sa,'complete')!=='Y') {
+      g.cbName=ga(sa,'batter'); g.battingVH=ga(sa,'vh');
+      g.inn=ga(sa,'inning'); g.outs=ga(sa,'outs');
+      g.balls=ga(sa,'b'); g.strikes=ga(sa,'s');
+      g.pitcher=ga(sa,'pitcher'); g.np=ga(sa,'np');
+      g.onFirst=ga(sa,'first'); g.onSecond=ga(sa,'second'); g.onThird=ga(sa,'third');
+      g.vup=ga(sa,'vup'); g.hup=ga(sa,'hup');
+      g.activeInnComplete=false;
     } else {
-      // Game over — flag it, still pull last known state
-      g.cbName    = ga(sa, 'batter');
-      g.battingVH = ga(sa, 'vh');
-      g.inn       = ga(sa, 'inning');
-      g.outs      = ga(sa, 'outs');
-      g.activeInnComplete = true;
+      g.cbName=ga(sa,'batter'); g.battingVH=ga(sa,'vh');
+      g.inn=ga(sa,'inning'); g.outs=ga(sa,'outs');
+      g.activeInnComplete=true;
     }
   } else {
-    // No <status> element — fall back to active half-inning detection
-    const playsBlock = xml.match(/<plays[\s\S]*?<\/plays>/);
-    if (playsBlock) {
-      const plays = playsBlock[0];
-      const battingRx = /<batting\s+([^>]+)>([\s\S]*?)(?=<batting\s|<\/inning>|<\/plays>)/g;
-      let bm, activeBattingAttrs = null, activeBattingBody = null;
-      while ((bm = battingRx.exec(plays)) !== null) {
-        const isComplete = /<innsummary/.test(bm[2]);
-        activeBattingAttrs = bm[1];
-        activeBattingBody  = bm[2];
-        g.activeInnComplete = isComplete;
-        if (!isComplete) break; // found the live one, stop
+    // Fallback: last play in active half-inning
+    const pb=xml.match(/<plays[\s\S]*?<\/plays>/);
+    if(pb) {
+      const bRx=/<batting\s+([^>]+)>([\s\S]*?)(?=<batting\s|<\/inning>|<\/plays>)/g;
+      let bm,aA=null,aB=null;
+      while((bm=bRx.exec(pb[0]))!==null){
+        const done=/<innsummary/.test(bm[2]);
+        aA=bm[1]; aB=bm[2]; g.activeInnComplete=done;
+        if(!done) break;
       }
-      if (activeBattingAttrs && activeBattingBody) {
-        g.battingVH = ga(activeBattingAttrs, 'vh');
-        const playRx = /<play\s+([^>]+)>/g;
-        let pm2, lastPlay = null;
-        while ((pm2 = playRx.exec(activeBattingBody)) !== null) lastPlay = pm2[1];
-        if (lastPlay) {
-          g.cbName = ga(lastPlay, 'batter');
-          g.outs   = ga(lastPlay, 'outs');
-          g.seq    = ga(lastPlay, 'seq');
-        }
+      if(aA&&aB){
+        g.battingVH=ga(aA,'vh');
+        const prx=/<play\s+([^>]+)>/g; let pm2,lp=null;
+        while((pm2=prx.exec(aB))!==null) lp=pm2[1];
+        if(lp){g.cbName=ga(lp,'batter');g.outs=ga(lp,'outs');g.seq=ga(lp,'seq');}
       }
-      const innMatches = [...plays.matchAll(/<inning number="(\d+)"/g)];
-      if (innMatches.length) g.inn = innMatches[innMatches.length-1][1];
+      const im=[...pb[0].matchAll(/<inning number="(\d+)"/g)];
+      if(im.length) g.inn=im[im.length-1][1];
     }
   }
 
-  // Resolve detected batter to a player object
-  detectedBatter = null;
-  if (g.cbName && g.battingVH !== '?') {
-    const t = g.battingVH === 'V' ? g.visitor : g.home;
-    detectedBatter = t?.byShort[g.cbName] || null;
+  detectedBatter=null;
+  if(g.cbName&&g.battingVH!=='?'){
+    const t=g.battingVH==='V'?g.visitor:g.home;
+    detectedBatter=t?.byShort[g.cbName]||null;
   }
-
   return g;
 }
 
-function parseSec(attrStr) {
-  const fields = ['ab','r','h','rbi','hr','bb','so','double','hbp','sb','sf','sh','avg','kl'];
-  const obj = {};
-  for (const f of fields) obj[f] = ga(attrStr, f);
-  return obj;
+function parseSec(a){
+  const f=['ab','r','h','rbi','hr','bb','so','double','hbp','sb','sf','sh','avg','kl'];
+  const o={};for(const k of f)o[k]=ga(a,k);return o;
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render() {
-  if (!game) return;
-  const g = game;
+  if(!game) return;
+  const g=game;
+
+  document.getElementById('teamHeaders').style.display='';
+  document.getElementById('colLabels').style.display='';
+  document.getElementById('dlBtn').disabled=false;
 
   // Team headers
-  document.getElementById('teamHeaders').style.display = '';
-  document.getElementById('colHeaders').style.display  = '';
-  document.getElementById('dlBtn').disabled = false;
+  document.getElementById('gId').textContent=g.visitor?.id||'VIS';
+  document.getElementById('gName').textContent=g.visitor?.name||'';
+  document.getElementById('gRecord').textContent=g.visitor?.record?`(${g.visitor.record})`:'';
+  document.getElementById('hId').textContent=g.home?.id||'HOME';
+  document.getElementById('hName').textContent=g.home?.name||'';
+  document.getElementById('hRecord').textContent=g.home?.record?`(${g.home.record})`:'';
 
-  document.getElementById('gId').textContent     = g.visitor?.id     || 'VIS';
-  document.getElementById('gName').textContent   = g.visitor?.name   || '';
-  document.getElementById('gRecord').textContent = g.visitor?.record ? `(${g.visitor.record})` : '';
-  document.getElementById('hId').textContent     = g.home?.id        || 'HOME';
-  document.getElementById('hName').textContent   = g.home?.name      || '';
-  document.getElementById('hRecord').textContent = g.home?.record    ? `(${g.home.record})` : '';
+  // Batting badges
+  const gb=document.getElementById('gBadge'),hb=document.getElementById('hBadge');
+  if(g.battingVH==='V'){gb.textContent='▶ BATTING';gb.className='batting-badge up';hb.textContent='FIELDING';hb.className='batting-badge dn';}
+  else if(g.battingVH==='H'){hb.textContent='▶ BATTING';hb.className='batting-badge up';gb.textContent='FIELDING';gb.className='batting-badge dn';}
+  else{gb.textContent='—';gb.className='batting-badge dn';hb.textContent='—';hb.className='batting-badge dn';}
 
-  // Batting indicators — Daktronics AT_BAT_INDICATOR is '>' for current batter's team
-  const gBadge = document.getElementById('gBadge');
-  const hBadge = document.getElementById('hBadge');
-  if (g.battingVH === 'V') {
-    gBadge.textContent = '▶ BATTING'; gBadge.className = 'th-badge up';
-    hBadge.textContent = 'FIELDING';  hBadge.className = 'th-badge down';
-  } else if (g.battingVH === 'H') {
-    hBadge.textContent = '▶ BATTING'; hBadge.className = 'th-badge up';
-    gBadge.textContent = 'FIELDING';  gBadge.className = 'th-badge down';
-  } else {
-    gBadge.textContent = '—'; gBadge.className = 'th-badge down';
-    hBadge.textContent = '—'; hBadge.className = 'th-badge down';
-  }
+  // Attempt color resolution (only on first render or if name changed)
+  const gName=g.visitor?.name||'', hName=g.home?.name||'';
+  if(gName!==lastGuestName){lastGuestName=gName;resolveTeamColor('V',gName);}
+  if(hName!==lastHomeName){lastHomeName=hName;resolveTeamColor('H',hName);}
 
   // Status bar
-  document.getElementById('sfFile').textContent    = fileHandle ? fileHandle.name : 'pasted (no write handle)';
-  document.getElementById('sfInn').textContent     = g.inn;
-  document.getElementById('sfOuts').textContent    = g.outs;
-  document.getElementById('sfBatting').textContent =
-    g.battingVH === 'V' ? `TOP · ${g.visitor?.name||''}` :
-    g.battingVH === 'H' ? `BOT · ${g.home?.name||''}` : '—';
-  if (g.balls !== undefined && g.balls !== '') {
-    document.getElementById('sfBS') && (document.getElementById('sfBS').textContent = `${g.balls}-${g.strikes}`);
-  }
+  document.getElementById('sfFile').textContent=fileHandle?fileHandle.name:'pasted';
+  document.getElementById('sfInn').textContent=g.inn;
+  document.getElementById('sfOuts').textContent=g.outs;
+  document.getElementById('sfBS').textContent=g.balls!==''?`${g.balls}-${g.strikes}`:'—';
+  document.getElementById('sfBatting').textContent=
+    g.battingVH==='V'?`TOP · ${g.visitor?.name||''}`:g.battingVH==='H'?`BOT · ${g.home?.name||''}`:'—';
 
-  // Sidebar — current batter
-  if (detectedBatter) {
-    document.getElementById('ovDetected').innerHTML =
-      `<span class="num">#${detectedBatter.uni}</span>${detectedBatter.shortname}`;
-    const halfLabel = g.battingVH === 'V' ? 'Top' : g.battingVH === 'H' ? 'Bot' : '';
-    const completeNote = g.activeInnComplete ? ' · game/inning complete' : '';
-    const bsNote = (g.balls !== undefined && g.balls !== '') ? ` · ${g.balls}-${g.strikes}` : '';
-    const npNote = g.np ? ` · ${g.np}p` : '';
-    document.getElementById('ovDetectedMeta').textContent =
-      `${detectedBatter.name} · ${(detectedBatter.pos||'').toUpperCase()} · ${halfLabel} ${g.inn} · ${g.outs} out${bsNote}${npNote}${completeNote}`;
-  } else if (g.cbName) {
-    document.getElementById('ovDetected').textContent = g.cbName;
-    const completeNote = g.activeInnComplete ? ' · game/inning complete' : '';
-    document.getElementById('ovDetectedMeta').textContent =
-      `Inn ${g.inn} · ${g.outs} out${completeNote} · not matched to roster`;
+  // Sidebar — now batting
+  if(detectedBatter){
+    document.getElementById('ovDetected').innerHTML=`<span class="num">#${detectedBatter.uni}</span>${detectedBatter.shortname}`;
+    const half=g.battingVH==='V'?'Top':g.battingVH==='H'?'Bot':'';
+    const note=g.activeInnComplete?' · game complete':'';
+    const bs=g.balls!==''?` · ${g.balls}-${g.strikes}`:'';
+    const np=g.np?` · ${g.np}p`:'';
+    document.getElementById('ovDetectedMeta').textContent=`${detectedBatter.name} · ${(detectedBatter.pos||'').toUpperCase()} · ${half} ${g.inn} · ${g.outs} out${bs}${np}${note}`;
+  } else if(g.cbName){
+    document.getElementById('ovDetected').textContent=g.cbName;
+    document.getElementById('ovDetectedMeta').textContent=`Inn ${g.inn} · ${g.outs} out · not matched to roster`;
   } else {
-    document.getElementById('ovDetected').textContent = '—';
-    document.getElementById('ovDetectedMeta').textContent = 'no status data found in XML';
+    document.getElementById('ovDetected').textContent='—';
+    document.getElementById('ovDetectedMeta').textContent='no status data found';
   }
 
   renderOverride();
   renderLineups();
-  renderStats(overridePick || detectedBatter);
+  renderStats(overridePick||detectedBatter);
   renderPill();
 }
 
-function renderOverride() {
-  const card    = document.getElementById('ovCard');
-  const block   = document.getElementById('ovTargetBlock');
-  const saveBtn = document.getElementById('saveBtn');
-  const clearBtn= document.getElementById('clearBtn');
-  const sfOv    = document.getElementById('sfOv');
+let lastGuestName='',lastHomeName='';
 
-  if (overridePick) {
-    card.classList.add('has-ov');
-    block.style.display = '';
-    document.getElementById('ovTarget').innerHTML =
-      `<span class="num">#${overridePick.uni}</span>${overridePick.shortname}`;
-    const teamName = overridePick.vh === 'V' ? game.visitor?.name : game.home?.name;
-    document.getElementById('ovTargetMeta').textContent =
-      `${overridePick.name} · ${(overridePick.pos||'').toUpperCase()} · Order ${overridePick.spot} · ${teamName||''}`;
-    saveBtn.disabled  = false;   // enabled whenever a player is selected
-    clearBtn.disabled = false;
-    sfOv.style.display = '';
+function renderOverride(){
+  const card=document.getElementById('ovCard');
+  const arrow=document.getElementById('ovArrow');
+  const tWrap=document.getElementById('ovTargetWrap');
+  const saveBtn=document.getElementById('saveBtn');
+  const clearBtn=document.getElementById('clearBtn');
+  document.getElementById('sfOv').style.display=overridePick?'':'none';
+
+  if(overridePick){
+    card.classList.add('has-ov');arrow.style.display='';tWrap.style.display='';
+    document.getElementById('ovTarget').innerHTML=`<span class="num">#${overridePick.uni}</span>${overridePick.shortname}`;
+    const tn=overridePick.vh==='V'?game.visitor?.name:game.home?.name;
+    document.getElementById('ovTargetMeta').textContent=`${overridePick.name} · ${(overridePick.pos||'').toUpperCase()} · Order ${overridePick.spot} · ${tn||''}`;
+    saveBtn.disabled=false; clearBtn.disabled=false;
   } else {
-    card.classList.remove('has-ov');
-    block.style.display = 'none';
-    saveBtn.disabled  = true;
-    clearBtn.disabled = !rawXML;
-    sfOv.style.display = 'none';
+    card.classList.remove('has-ov');arrow.style.display='none';tWrap.style.display='none';
+    saveBtn.disabled=true; clearBtn.disabled=!rawXML;
   }
 }
 
-function renderLineups() {
-  const wrap = document.getElementById('lineups');
-  wrap.innerHTML = '';
-
-  for (const vh of ['V','H']) {
-    const team = vh === 'V' ? game.visitor : game.home;
-    const col  = document.createElement('div');
-    col.className = 'lineup-col';
-    const inner = document.createElement('div');
-    inner.className = 'lineup-inner';
-
-    if (!team?.lineup?.length) {
-      inner.innerHTML = '<div style="padding:20px;text-align:center;color:var(--txt3);font-size:12px;letter-spacing:0.05em;">NO LINEUP DATA</div>';
+function renderLineups(){
+  const wrap=document.getElementById('lineups');
+  if(!game){return;}
+  wrap.innerHTML='';
+  for(const vh of['V','H']){
+    const team=vh==='V'?game.visitor:game.home;
+    const col=document.createElement('div');col.className='lineup-col';
+    const inner=document.createElement('div');inner.className='lineup-inner';
+    if(!team?.lineup?.length){
+      inner.innerHTML='<div style="padding:20px;text-align:center;color:var(--txt3);font-size:12px;letter-spacing:.05em">NO LINEUP DATA</div>';
     } else {
-      for (const p of team.lineup) {
-        inner.appendChild(buildRow(p, vh));
-      }
+      const rowColor=vh==='V'?guestColor:homeColor;
+      for(const p of team.lineup) inner.appendChild(buildRow(p,vh,rowColor));
     }
-    col.appendChild(inner);
-    wrap.appendChild(col);
+    col.appendChild(inner);wrap.appendChild(col);
   }
 }
 
-function buildRow(p, vh) {
-  const row = document.createElement('div');
-  row.className = 'br';
+function buildRow(p,vh,rowColor){
+  const row=document.createElement('div');row.className='br';
+  const isAtBat=detectedBatter&&p.shortname===detectedBatter.shortname&&vh===game.battingVH;
+  const isSel=overridePick&&p.shortname===overridePick.shortname&&vh===overridePick.vh;
+  if(isAtBat) row.classList.add('at-bat');
+  if(isSel)   row.classList.add('selected');
+  // Set the row color CSS variable for at-bat highlight
+  row.style.setProperty('--row-color', rowColor);
 
-  const isAtBat   = detectedBatter &&
-    p.shortname === detectedBatter.shortname &&
-    vh === game.battingVH;
-
-  const isSelected = overridePick &&
-    p.shortname === overridePick.shortname &&
-    vh === overridePick.vh;
-
-  if (isAtBat)   row.classList.add('at-bat');
-  if (isSelected) row.classList.add('selected');
-
-  // Stats: prefer today's game stats (from DID: GAME_AB, GAME_HITS, GAME_RBI)
-  // Fall back to season for AVG
-  const t = p.today  || {};
-  const s = p.season || {};
-
-  const avg  = s.avg  || '—';
-  const ab   = t.ab   || '0';
-  const h    = t.h    || '0';
-  const rbi  = t.rbi  || '0';
-
-  row.innerHTML = `
-    <div class="br-indicator"></div>
+  const t=p.today||{},s=p.season||{};
+  row.innerHTML=`
+    <div class="br-bar"></div>
     <div class="br-spot">${p.spot}</div>
     <div class="br-uni">${p.uni||'—'}</div>
-    <div class="br-name-block">
-      <div class="br-name">${p.name || p.shortname}</div>
+    <div class="br-info">
+      <div class="br-name">${p.name||p.shortname}</div>
       <div class="br-pos">${(p.pos||'?').toUpperCase()}${p.bats?' · '+p.bats:''}</div>
     </div>
     <div class="br-stats">
-      <div class="brs"><div class="sv">${avg}</div><div class="sk">AVG</div></div>
-      <div class="brs"><div class="sv">${ab}</div><div class="sk">AB</div></div>
-      <div class="brs"><div class="sv">${h}</div><div class="sk">H</div></div>
-      <div class="brs"><div class="sv">${rbi}</div><div class="sk">RBI</div></div>
+      <div class="brs"><div class="sv">${s.avg||'—'}</div><div class="sk">AVG</div></div>
+      <div class="brs"><div class="sv">${t.ab||'0'}</div><div class="sk">AB</div></div>
+      <div class="brs"><div class="sv">${t.h||'0'}</div><div class="sk">H</div></div>
+      <div class="brs"><div class="sv">${t.rbi||'0'}</div><div class="sk">RBI</div></div>
     </div>
-    ${p.isSub ? '<div class="sub-tag">SUB</div>' : ''}
+    ${p.isSub?'<div class="sub-tag">SUB</div>':''}
   `;
-
-  row.addEventListener('click', () => onRowClick(p, vh));
+  row.addEventListener('click',()=>onRowClick(p,vh));
   return row;
 }
 
-function renderStats(p) {
-  const sSection = document.getElementById('seasonSection');
-  const gSection = document.getElementById('gameStatSection');
-
-  if (!p) { sSection.style.display = 'none'; gSection.style.display = 'none'; return; }
-
-  const who = overridePick || p;
-  const label = overridePick ? '▶ Override — Season' : 'Detected Batter — Season';
-  document.getElementById('seasonHd').textContent = label;
-
-  const s = who.season || {};
-  const seasonDefs = [
-    {k:'avg',l:'AVG'},{k:'ab',l:'AB'},{k:'h',l:'H'},
-    {k:'hr',l:'HR'},{k:'rbi',l:'RBI'},{k:'bb',l:'BB'},
-    {k:'so',l:'SO'},{k:'sb',l:'SB'},{k:'hbp',l:'HBP'},
-  ];
-  sSection.style.display = '';
-  document.getElementById('seasonGrid').innerHTML = seasonDefs.map(d =>
-    `<div class="stat-cell"><div class="v">${s[d.k]||(d.k==='avg'?'—':'0')}</div><div class="k">${d.l}</div></div>`
-  ).join('');
-
-  // Today's game stats — mirrors Daktronics GAME_AB / GAME_HITS / GAME_RBI / GAME_RUNS
-  const t = who.today || {};
-  const gameDefs = [
-    {k:'ab',l:'AB'},{k:'h',l:'H'},{k:'rbi',l:'RBI'},{k:'r',l:'R'},
-  ];
-  document.getElementById('gameStatHd').textContent =
-    (overridePick ? '▶ Override' : 'Detected') + ' — Today';
-  gSection.style.display = '';
-  document.getElementById('gameStatRow').innerHTML = gameDefs.map(d =>
-    `<div class="stat-cell" style="flex:1;"><div class="v">${t[d.k]||'0'}</div><div class="k">${d.l}</div></div>`
-  ).join('');
+function renderStats(p){
+  const ss=document.getElementById('secSeason'),st=document.getElementById('secToday');
+  if(!p){ss.style.display='none';st.style.display='none';return;}
+  const who=overridePick||p;
+  document.getElementById('hdSeason').textContent=(overridePick?'▶ Override':'Detected Batter')+' — Season';
+  document.getElementById('hdToday').textContent=(overridePick?'▶ Override':'Detected')+' — Today';
+  const s=who.season||{};
+  const sdefs=[{k:'avg',l:'AVG'},{k:'ab',l:'AB'},{k:'h',l:'H'},{k:'hr',l:'HR'},{k:'rbi',l:'RBI'},{k:'bb',l:'BB'},{k:'so',l:'SO'},{k:'sb',l:'SB'},{k:'hbp',l:'HBP'}];
+  ss.style.display='';
+  document.getElementById('gridSeason').innerHTML=sdefs.map(d=>`<div class="stat-cell"><div class="v">${s[d.k]||(d.k==='avg'?'—':'0')}</div><div class="k">${d.l}</div></div>`).join('');
+  const td=who.today||{};
+  const tdefs=[{k:'ab',l:'AB'},{k:'h',l:'H'},{k:'rbi',l:'RBI'},{k:'r',l:'R'}];
+  st.style.display='';
+  document.getElementById('gridToday').innerHTML=tdefs.map(d=>`<div class="stat-cell"><div class="v">${td[d.k]||'0'}</div><div class="k">${d.l}</div></div>`).join('');
 }
 
-function renderPill() {
-  const pill = document.getElementById('pill');
-  const txt  = document.getElementById('pillTxt');
-  if (overridePick) {
-    pill.className = 'pill active';
-    txt.textContent = `OVERRIDE · #${overridePick.uni} ${overridePick.shortname}`;
-  } else if (rawXML) {
-    pill.className = 'pill live';
-    txt.textContent = detectedBatter
-      ? `LIVE · #${detectedBatter.uni} ${detectedBatter.shortname}`
-      : 'LIVE · monitoring';
-  } else {
-    pill.className = 'pill';
-    txt.textContent = 'No file loaded';
-  }
+function renderPill(){
+  const pill=document.getElementById('pill'),txt=document.getElementById('pillTxt');
+  if(overridePick){pill.className='pill active';txt.textContent=`OVERRIDE · #${overridePick.uni} ${overridePick.shortname}`;}
+  else if(rawXML){pill.className='pill live';txt.textContent=detectedBatter?`LIVE · #${detectedBatter.uni} ${detectedBatter.shortname}`:'LIVE · monitoring';}
+  else{pill.className='pill';txt.textContent='No file loaded';}
 }
 
-// ── ROW CLICK ─────────────────────────────────────────────────────────────
-function onRowClick(p, vh) {
-  // Toggle off if already selected
-  if (overridePick && overridePick.shortname === p.shortname && overridePick.vh === vh) {
-    overridePick = null;
-  } else {
-    overridePick = { ...p, vh };
-  }
-  renderOverride();
-  renderLineups();
-  renderStats(overridePick || detectedBatter);
-  renderPill();
+function onRowClick(p,vh){
+  if(overridePick&&overridePick.shortname===p.shortname&&overridePick.vh===vh) overridePick=null;
+  else overridePick={...p,vh};
+  renderOverride();renderLineups();renderStats(overridePick||detectedBatter);renderPill();
 }
 
-// ── XML MANIPULATION ──────────────────────────────────────────────────────
-// The override replaces the detected current batter's identity everywhere
-// in the XML so that when Daktronics runs the DID conversion it sees the
-// override player's name/number/stats in all LINEUP_XX_NAME, _NUMBER,
-// _AT_BAT_INDICATOR, _AVG, GAME_HITS, GAME_AB, GAME_RBI, GAME_RUNS fields,
-// plus DUE_UP slots and base runner name fields.
-function buildModXML() {
-  if (!rawXML || !overridePick || !detectedBatter) return rawXML;
+// ── XML MOD ───────────────────────────────────────────────────────────────
+function buildModXML(){
+  if(!rawXML||!overridePick||!detectedBatter) return rawXML;
+  const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const {shortname:oSh,name:oFull,uni:oUni,spot:oSpot,pos:oPos,bats:oBats} = detectedBatter;
+  const {shortname:nSh,name:nFull,uni:nUni,spot:nSpot,pos:nPos,bats:nBats} = overridePick;
+  const posUse=nPos||oPos||'';
+  const batsUse=nBats||'';
+  const upAttr=game.battingVH==='V'?'vup':'hup';
 
-  const esc      = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const oldShort = detectedBatter.shortname;
-  const oldFull  = detectedBatter.name;
-  const oldSpot  = detectedBatter.spot;
-  const oldPos   = detectedBatter.pos || '';
+  let out=rawXML;
 
-  const newShort = overridePick.shortname;
-  const newFull  = overridePick.name;
-  const newUni   = overridePick.uni;
-  const newSpot  = overridePick.spot;
-  const newPos   = overridePick.pos || oldPos;
-  const newBats  = overridePick.bats || '';
+  // 1. Transplant full <player> block: extract override player's inner stats,
+  //    inject into detected batter's player element keeping the lineup slot
+  const ovBlockRx=new RegExp(`<player\\s+[^>]*shortname="${esc(nSh)}"[^>]*>([\\s\\S]*?)<\\/player>`);
+  const ovMatch=out.match(ovBlockRx);
+  const innerStats=ovMatch?ovMatch[1]:'';
 
-  const battingVH = game.battingVH;
-  const upAttr    = battingVH === 'V' ? 'vup' : 'hup';
+  const detBlockRx=new RegExp(`<player\\s+[^>]*shortname="${esc(oSh)}"[^>]*>[\\s\\S]*?<\\/player>`);
+  const replacement=`<player name="${nFull}" shortname="${nSh}" code="" uni="${nUni}" gp="1" gs="1" spot="${oSpot}" pos="${posUse}" atpos="${posUse}" bats="${batsUse}" throws="">${innerStats}</player>`;
+  out=out.replace(detBlockRx,replacement);
 
-  let out = rawXML;
+  // 2. Status element
+  out=out.replace(/(<status\s[^>]*\bbatter=")[^"]*"/,`$1${nSh}"`);
+  out=out.replace(new RegExp(`(<status\\s[^>]*\\b${upAttr}=")[^"]*"`),`$1${nSpot}"`);
 
-  // ── 1. Find the override player's full <player> block in the XML
-  //    We'll extract everything inside it — hitting, hitseason, fielding,
-  //    hsitsummary — to inject into the detected batter's slot.
-  const overridePlayerRx = new RegExp(
-    `<player\\s+[^>]*shortname="${esc(newShort)}"[^>]*>([\\s\\S]*?)<\\/player>`
-  );
-  const overridePlayerMatch = out.match(overridePlayerRx);
-  const overrideInnerStats = overridePlayerMatch
-    ? overridePlayerMatch[1]   // everything between <player ...> and </player>
-    : '';
-
-  // ── 2. Replace the detected batter's entire <player> block.
-  //    Keep the detected batter's spot/position slot in the lineup but
-  //    replace the player header attributes AND all inner stat elements
-  //    with the override player's data. This is what makes the DID fields
-  //    (LINEUP_XX_AVG, GAME_AB, GAME_HITS, GAME_RBI, GAME_RUNS, etc.) correct.
-  const detectedPlayerRx = new RegExp(
-    `<player\\s+[^>]*shortname="${esc(oldShort)}"[^>]*>[\\s\\S]*?<\\/player>`
+  // 3. Batord slot
+  out=out.replace(
+    new RegExp(`(<batord\\s+spot="${oSpot}"\\s+name=")[^"]*("\\s+uni=")[^"]*("\\s+pos=")[^"]*"`),
+    `$1${nSh}$2${nUni}$3${posUse}"`
   );
 
-  // Build the replacement player element — detected batter's slot/position,
-  // override player's name/uni/stats
-  const replacementPlayer =
-    `<player name="${newFull}" shortname="${newShort}" code="" uni="${newUni}" ` +
-    `gp="1" gs="1" spot="${oldSpot}" pos="${oldPos}" atpos="${oldPos}" ` +
-    `bats="${newBats}" throws="">` +
-    overrideInnerStats +
-    `</player>`;
+  // 4. All remaining name attribute refs
+  out=out.replace(new RegExp(`="${esc(oSh)}"`, 'g'),`="${nSh}"`);
+  if(oFull&&oFull!==oSh) out=out.replace(new RegExp(`="${esc(oFull)}"`, 'g'),`="${nFull}"`);
 
-  out = out.replace(detectedPlayerRx, replacementPlayer);
-
-  // ── 3. Update <status batter="..." vup/hup="...">
-  out = out.replace(
-    /(<status\s[^>]*\bbatter=")[^"]*"/,
-    `$1${newShort}"`
-  );
-  out = out.replace(
-    new RegExp(`(<status\\s[^>]*\\b${upAttr}=")[^"]*"`),
-    `$1${newSpot}"`
-  );
-
-  // ── 4. Update the <batord> slot to show override player
-  out = out.replace(
-    new RegExp(`(<batord\\s+spot="${oldSpot}"\\s+name=")[^"]*("\\s+uni=")[^"]*("\\s+pos=")[^"]*"`),
-    `$1${newShort}$2${newUni}$3${newPos}"`
-  );
-
-  // ── 5. Replace all remaining attribute value occurrences of the old name
-  //    (batter="", first="", second="", third="", any leftover shortname/name refs)
-  out = out.replace(new RegExp(`="${esc(oldShort)}"`, 'g'), `="${newShort}"`);
-  if (oldFull && oldFull !== oldShort)
-    out = out.replace(new RegExp(`="${esc(oldFull)}"`, 'g'), `="${newFull}"`);
-
-  // ── 6. Replace old name in narrative text
-  out = out.replace(new RegExp(esc(oldShort), 'g'), newShort);
-  if (oldFull && oldFull !== oldShort)
-    out = out.replace(new RegExp(esc(oldFull), 'g'), newFull);
+  // 5. Narrative text
+  out=out.replace(new RegExp(esc(oSh),'g'),nSh);
+  if(oFull&&oFull!==oSh) out=out.replace(new RegExp(esc(oFull),'g'),nFull);
 
   return out;
 }
 
-// ── SAVE / CLEAR / DOWNLOAD ───────────────────────────────────────────────
-async function doSave() {
-  if (!overridePick) {
-    toast('Select a batter from the lineup first', 'err');
-    return;
-  }
-  if (!detectedBatter) {
-    toast('Could not detect current batter in XML — name swap skipped, saving as-is', 'warn');
-  }
-  const xml = buildModXML();
-  const wrote = await writeToHandle(xml);
-  const t = new Date().toLocaleTimeString();
-  if (wrote) {
-    document.getElementById('sfSaved').textContent = `Written ${t}`;
-    toast(`test.xml overwritten · Daktronics now sees #${overridePick.uni} ${overridePick.shortname} as current batter`, 'ok');
-  } else {
-    document.getElementById('sfSaved').textContent = `Downloaded ${t}`;
-    toast('Fell back to download — load file via picker first for in-place writes', 'warn');
-  }
+// ── WRITE ─────────────────────────────────────────────────────────────────
+async function writeToHandle(content){
+  if(!fileHandle){triggerDL(content,'test.xml');return false;}
+  let perm=await fileHandle.queryPermission({mode:'readwrite'});
+  if(perm!=='granted') perm=await fileHandle.requestPermission({mode:'readwrite'});
+  if(perm!=='granted'){toast('Write permission denied','err');return false;}
+  const w=await fileHandle.createWritable();
+  await w.write(content); await w.close();
+  return true;
 }
 
-async function doClear() {
-  overridePick = null;
-  renderOverride();
-  renderLineups();
-  renderStats(detectedBatter);
-  renderPill();
-  if (!rawXML) return;
-  const wrote = await writeToHandle(rawXML);
-  const t = new Date().toLocaleTimeString();
-  if (wrote) {
-    document.getElementById('sfSaved').textContent = `Restored ${t}`;
-    toast('Override cleared · original test.xml written back · stats operator feed active', 'warn');
-  } else {
-    document.getElementById('sfSaved').textContent = `Downloaded ${t}`;
-    toast('Fell back to download — original XML sent', 'warn');
-  }
+async function doSave(){
+  if(!overridePick){toast('Select a batter from the lineup first','err');return;}
+  if(!detectedBatter) toast('No current batter detected — saving XML as-is','warn');
+  const xml=buildModXML();
+  const wrote=await writeToHandle(xml);
+  const t=ts();
+  if(wrote){document.getElementById('sfSaved').textContent=`Written ${t}`;toast(`test.xml overwritten · Daktronics sees #${overridePick.uni} ${overridePick.shortname}`,'ok');}
+  else{document.getElementById('sfSaved').textContent=`Downloaded ${t}`;toast('No write handle — fell back to download','warn');}
 }
 
-function doDL() {
-  // Manual download always available as backup
-  const xml = overridePick ? buildModXML() : rawXML;
-  if (xml) triggerDL(xml, 'test.xml');
+async function doClear(){
+  overridePick=null;
+  renderOverride();renderLineups();renderStats(detectedBatter);renderPill();
+  if(!rawXML) return;
+  const wrote=await writeToHandle(rawXML);
+  const t=ts();
+  if(wrote){document.getElementById('sfSaved').textContent=`Restored ${t}`;toast('Override cleared · original test.xml restored','warn');}
+  else{document.getElementById('sfSaved').textContent=`Downloaded ${t}`;toast('Fell back to download','warn');}
 }
 
-function triggerDL(content, fname) {
-  const blob = new Blob([content], {type:'application/xml'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = fname;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
+function doDL(){
+  const xml=overridePick?buildModXML():rawXML;
+  if(xml) triggerDL(xml,'test.xml');
+}
+
+function triggerDL(content,fname){
+  const blob=new Blob([content],{type:'application/xml'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────
-let toastTmr;
-function toast(msg, type='ok') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = `toast show ${type}`;
-  clearTimeout(toastTmr);
-  toastTmr = setTimeout(() => { el.className = 'toast'; }, 3600);
+let toastT;
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className=`toast show ${type}`;
+  clearTimeout(toastT);toastT=setTimeout(()=>{el.className='toast';},3600);
 }
 </script>
 </body>
