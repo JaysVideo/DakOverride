@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dak Override</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230057A8'/%3E%3Crect x='2' y='2' width='28' height='28' rx='4' fill='%23003E7E'/%3E%3Ctext x='16' y='21' font-family='Arial Narrow%2C sans-serif' font-weight='900' font-size='15' fill='%23FFFFFF' text-anchor='middle' letter-spacing='1'%3EOVR%3C/text%3E%3C/svg%3E">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@400;500&display=swap');
 
@@ -131,51 +132,73 @@ input[type=file]{display:none}
 /* team headers */
 .team-headers{
   display:grid;grid-template-columns:1fr 1fr;
-  border-bottom:1px solid var(--border);flex-shrink:0;
+  border-bottom:2px solid var(--border);flex-shrink:0;
 }
 .th{
   padding:0;display:flex;flex-direction:column;overflow:hidden;
-  position:relative;
+  position:relative;background:#ffffff;
 }
-.th:first-child{border-right:1px solid var(--border)}
+.th:first-child{border-right:2px solid var(--border)}
 
-.th-colorbar{
-  height:3px;width:100%;
-  background:var(--tc-guest);
-  transition:background .4s;
+/* thick left-edge color accent — the team color lives here */
+.th-accent{
+  position:absolute;left:0;top:0;bottom:0;width:5px;
+  background:var(--tc-guest);transition:background .4s;
 }
-.th:last-child .th-colorbar{background:var(--tc-home)}
+.th:last-child .th-accent{background:var(--tc-home)}
 
-.th-inner{display:flex;align-items:center;padding:8px 14px;gap:10px}
+.th-inner{
+  display:flex;align-items:center;
+  padding:10px 14px 10px 20px; /* 20px left = clears the accent bar */
+  gap:12px;
+}
 .th-logo{
-  width:38px;height:38px;object-fit:contain;flex-shrink:0;
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));
+  width:42px;height:42px;object-fit:contain;flex-shrink:0;
   transition:opacity .3s;
 }
 .th-id{
-  font-size:32px;font-weight:800;letter-spacing:.04em;line-height:1;
+  font-size:36px;font-weight:800;letter-spacing:.04em;line-height:1;
   color:var(--tc-guest);transition:color .4s;
 }
 .th:last-child .th-id{color:var(--tc-home)}
 .th-meta{flex:1;min-width:0}
-.th-name{font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.th-record{font-family:monospace;font-size:10px;color:var(--txt3);margin-top:1px}
+.th-name{
+  font-size:14px;font-weight:700;
+  color:#111;  /* dark on white — always readable */
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.th-record{
+  font-family:monospace;font-size:11px;
+  color:#555;  /* mid-grey on white — WCAG AA */
+  margin-top:2px;
+}
 .th-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
 
 .batting-badge{
-  font-family:monospace;font-size:9px;letter-spacing:.09em;text-transform:uppercase;
-  padding:3px 8px;border-radius:3px;
+  font-family:monospace;font-size:9px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 9px;border-radius:3px;
 }
-.batting-badge.up{color:var(--green);background:var(--green-d);border:1px solid rgba(37,168,90,.3)}
-.batting-badge.dn{color:var(--txt3);background:var(--s2);border:1px solid var(--border)}
+/* batting badge uses the team color as bg, white text — always high contrast */
+.batting-badge.up{
+  color:#fff;
+  background:var(--tc-guest);
+  border:none;
+}
+.th:last-child .batting-badge.up{background:var(--tc-home)}
+.batting-badge.dn{
+  color:#999;background:#f0f0f0;border:1px solid #ddd;
+}
 
-/* color picker row */
+/* color picker row — sits below the white header, back on dark */
 .color-row{
   display:flex;align-items:center;gap:6px;
-  padding:0 14px 8px;
+  padding:4px 14px 6px 20px;
+  background:var(--s2);
+  border-top:1px solid var(--border);
 }
 .color-swatch{
-  width:20px;height:20px;border-radius:3px;border:1px solid var(--border2);
+  width:16px;height:16px;border-radius:2px;border:1px solid var(--border2);
   cursor:pointer;flex-shrink:0;transition:transform .1s;position:relative;overflow:hidden;
 }
 .color-swatch:hover{transform:scale(1.15)}
@@ -393,7 +416,7 @@ input[type=file]{display:none}
     <div class="team-headers" id="teamHeaders" style="display:none">
       <!-- GUEST -->
       <div class="th" id="thGuest">
-        <div class="th-colorbar" id="cbGuest"></div>
+        <div class="th-accent" id="cbGuest"></div>
         <div class="th-inner">
           <img class="th-logo" id="logoGuest" src="" alt="" style="display:none">
           <div class="th-id" id="gId">VIS</div>
@@ -414,7 +437,7 @@ input[type=file]{display:none}
       </div>
       <!-- HOME -->
       <div class="th" id="thHome">
-        <div class="th-colorbar" id="cbHome"></div>
+        <div class="th-accent" id="cbHome"></div>
         <div class="th-inner">
           <img class="th-logo" id="logoHome" src="" alt="" style="display:none">
           <div class="th-id" id="hId">HOME</div>
@@ -575,13 +598,21 @@ function applyTeamColor(vh, hex) {
 
   const swatchId = isGuest ? 'swatchGuest' : 'swatchHome';
   const pickerId = isGuest ? 'pickerGuest' : 'pickerHome';
+  const accentId = isGuest ? 'cbGuest' : 'cbHome';
+  const badgeId  = isGuest ? 'gBadge' : 'hBadge';
+
   document.getElementById(swatchId).style.background = hex;
   document.getElementById(pickerId).value = hex;
+  document.getElementById(accentId).style.background = hex;
 
-  // Also update row color variable for at-bat rows in that column
-  // We store per-column via data attributes and apply on render
+  // If this team is currently batting, keep the badge color in sync
+  const badge = document.getElementById(badgeId);
+  if (badge && badge.classList.contains('up')) {
+    badge.style.background = hex;
+  }
+
   if (isGuest) guestColor = hex; else homeColor = hex;
-  renderLineups(); // re-render rows with new color
+  renderLineups();
 }
 
 function onColorPick(vh, hex) {
@@ -895,11 +926,22 @@ function render() {
   document.getElementById('hName').textContent=g.home?.name||'';
   document.getElementById('hRecord').textContent=g.home?.record?`(${g.home.record})`:'';
 
-  // Batting badges
+  // Batting badges — active team gets team color background, white text
   const gb=document.getElementById('gBadge'),hb=document.getElementById('hBadge');
-  if(g.battingVH==='V'){gb.textContent='▶ BATTING';gb.className='batting-badge up';hb.textContent='FIELDING';hb.className='batting-badge dn';}
-  else if(g.battingVH==='H'){hb.textContent='▶ BATTING';hb.className='batting-badge up';gb.textContent='FIELDING';gb.className='batting-badge dn';}
-  else{gb.textContent='—';gb.className='batting-badge dn';hb.textContent='—';hb.className='batting-badge dn';}
+  if(g.battingVH==='V'){
+    gb.textContent='▶ BATTING'; gb.className='batting-badge up';
+    gb.style.background=guestColor; gb.style.color='#fff';
+    hb.textContent='FIELDING';  hb.className='batting-badge dn';
+    hb.style.background=''; hb.style.color='';
+  } else if(g.battingVH==='H'){
+    hb.textContent='▶ BATTING'; hb.className='batting-badge up';
+    hb.style.background=homeColor; hb.style.color='#fff';
+    gb.textContent='FIELDING';  gb.className='batting-badge dn';
+    gb.style.background=''; gb.style.color='';
+  } else {
+    gb.textContent='—'; gb.className='batting-badge dn'; gb.style.background=''; gb.style.color='';
+    hb.textContent='—'; hb.className='batting-badge dn'; hb.style.background=''; hb.style.color='';
+  }
 
   // Attempt color + logo resolution (only when team name changes)
   const gName=g.visitor?.name||'', hName=g.home?.name||'';
