@@ -1092,13 +1092,11 @@ function onRowClick(p, vh) {
 // _AT_BAT_INDICATOR, _AVG, GAME_HITS, GAME_AB, GAME_RBI, GAME_RUNS fields,
 // plus DUE_UP slots and base runner name fields.
 function buildModXML() {
-  if (!rawXML || !overridePick) return rawXML;
-  if (!detectedBatter) return rawXML;
+  if (!rawXML || !overridePick || !detectedBatter) return rawXML;
 
-  const esc  = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const esc      = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const oldShort = detectedBatter.shortname;
   const oldFull  = detectedBatter.name;
-  const oldUni   = detectedBatter.uni;
   const oldSpot  = detectedBatter.spot;
   const oldPos   = detectedBatter.pos || '';
 
@@ -1106,44 +1104,68 @@ function buildModXML() {
   const newFull  = overridePick.name;
   const newUni   = overridePick.uni;
   const newSpot  = overridePick.spot;
-  const newPos   = overridePick.pos || oldPos; // fall back to original pos if missing
+  const newPos   = overridePick.pos || oldPos;
+  const newBats  = overridePick.bats || '';
 
-  const battingVH = game.battingVH;   // 'V' or 'H'
-  const upAttr    = battingVH === 'V' ? 'vup' : 'hup'; // which spot attr to update in <status>
+  const battingVH = game.battingVH;
+  const upAttr    = battingVH === 'V' ? 'vup' : 'hup';
 
   let out = rawXML;
 
-  // ── 1. Update <status batter="..." vup/hup="...">
-  // Replace batter name in status element
+  // ── 1. Find the override player's full <player> block in the XML
+  //    We'll extract everything inside it — hitting, hitseason, fielding,
+  //    hsitsummary — to inject into the detected batter's slot.
+  const overridePlayerRx = new RegExp(
+    `<player\\s+[^>]*shortname="${esc(newShort)}"[^>]*>([\\s\\S]*?)<\\/player>`
+  );
+  const overridePlayerMatch = out.match(overridePlayerRx);
+  const overrideInnerStats = overridePlayerMatch
+    ? overridePlayerMatch[1]   // everything between <player ...> and </player>
+    : '';
+
+  // ── 2. Replace the detected batter's entire <player> block.
+  //    Keep the detected batter's spot/position slot in the lineup but
+  //    replace the player header attributes AND all inner stat elements
+  //    with the override player's data. This is what makes the DID fields
+  //    (LINEUP_XX_AVG, GAME_AB, GAME_HITS, GAME_RBI, GAME_RUNS, etc.) correct.
+  const detectedPlayerRx = new RegExp(
+    `<player\\s+[^>]*shortname="${esc(oldShort)}"[^>]*>[\\s\\S]*?<\\/player>`
+  );
+
+  // Build the replacement player element — detected batter's slot/position,
+  // override player's name/uni/stats
+  const replacementPlayer =
+    `<player name="${newFull}" shortname="${newShort}" code="" uni="${newUni}" ` +
+    `gp="1" gs="1" spot="${oldSpot}" pos="${oldPos}" atpos="${oldPos}" ` +
+    `bats="${newBats}" throws="">` +
+    overrideInnerStats +
+    `</player>`;
+
+  out = out.replace(detectedPlayerRx, replacementPlayer);
+
+  // ── 3. Update <status batter="..." vup/hup="...">
   out = out.replace(
     /(<status\s[^>]*\bbatter=")[^"]*"/,
     `$1${newShort}"`
   );
-  // Replace the up-spot number (vup or hup) to reflect override player's order position
   out = out.replace(
     new RegExp(`(<status\\s[^>]*\\b${upAttr}=")[^"]*"`),
     `$1${newSpot}"`
   );
 
-  // ── 2. Update the <batord> entry for the detected batter's slot
-  // The batord slot being vacated by the detected batter needs to now
-  // show the override player's name, uni, and position.
-  // We target the specific batord by spot number within the batting team's block.
-  // Match: <batord spot="N" name="OLD" uni="OLD" pos="OLD">
+  // ── 4. Update the <batord> slot to show override player
   out = out.replace(
     new RegExp(`(<batord\\s+spot="${oldSpot}"\\s+name=")[^"]*("\\s+uni=")[^"]*("\\s+pos=")[^"]*"`),
     `$1${newShort}$2${newUni}$3${newPos}"`
   );
 
-  // ── 3. Replace all attribute value occurrences of the old shortname
-  //     (batter="", first="", second="", third="", shortname="", name="")
+  // ── 5. Replace all remaining attribute value occurrences of the old name
+  //    (batter="", first="", second="", third="", any leftover shortname/name refs)
   out = out.replace(new RegExp(`="${esc(oldShort)}"`, 'g'), `="${newShort}"`);
-
-  // ── 4. Replace full name attribute values
   if (oldFull && oldFull !== oldShort)
     out = out.replace(new RegExp(`="${esc(oldFull)}"`, 'g'), `="${newFull}"`);
 
-  // ── 5. Replace in narrative text nodes
+  // ── 6. Replace old name in narrative text
   out = out.replace(new RegExp(esc(oldShort), 'g'), newShort);
   if (oldFull && oldFull !== oldShort)
     out = out.replace(new RegExp(esc(oldFull), 'g'), newFull);
