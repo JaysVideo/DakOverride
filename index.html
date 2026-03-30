@@ -147,6 +147,11 @@ input[type=file]{display:none}
 .th:last-child .th-colorbar{background:var(--tc-home)}
 
 .th-inner{display:flex;align-items:center;padding:8px 14px;gap:10px}
+.th-logo{
+  width:38px;height:38px;object-fit:contain;flex-shrink:0;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));
+  transition:opacity .3s;
+}
 .th-id{
   font-size:32px;font-weight:800;letter-spacing:.04em;line-height:1;
   color:var(--tc-guest);transition:color .4s;
@@ -301,7 +306,7 @@ input[type=file]{display:none}
 <div class="iframe-banner" id="iframeBanner" style="display:none">
   <div class="ib-box">
     <h2>⚠ Open as Standalone Page</h2>
-    <p>This tool writes directly to <code>test.xml</code> on disk using the browser's File System Access API — which requires running as a top-level page in Chrome, not inside an embedded preview.</p>
+    <p>This tool writes directly to your selected XML file on disk using the browser's File System Access API — which requires running as a top-level page in Chrome, not inside an embedded preview.</p>
     <button class="ib-open" onclick="window.open(window.location.href,'_blank')">Open in New Tab</button>
     <span class="ib-dismiss" onclick="document.getElementById('iframeBanner').style.display='none'">Dismiss — use paste / download fallback instead</span>
   </div>
@@ -323,8 +328,8 @@ input[type=file]{display:none}
 
     <!-- FILE -->
     <div class="sb">
-      <div class="sb-hd">Source — test.xml</div>
-      <input class="finput" id="pathInput" placeholder="click Load to pick test.xml" readonly>
+      <div class="sb-hd">Source XML</div>
+      <input class="finput" id="pathInput" placeholder="click Load to pick XML file" readonly>
       <div class="btn-row">
         <button class="btn b-blue" onclick="doLoad()">Load</button>
         <button class="btn b-ghost" id="reloadBtn" onclick="doReload()" disabled>↺ Reload</button>
@@ -342,7 +347,7 @@ input[type=file]{display:none}
       <div class="ov-card" id="ovCard">
         <div class="ov-lbl">Now Batting</div>
         <div class="ov-name" id="ovDetected">—</div>
-        <div class="ov-meta" id="ovDetectedMeta">load test.xml to begin</div>
+        <div class="ov-meta" id="ovDetectedMeta">load an XML file to begin</div>
         <div class="ov-arrow" id="ovArrow" style="display:none">
           <span class="ov-arrow-icon">▼</span>
           <div class="ov-lbl" style="margin:0">Replacing with</div>
@@ -356,11 +361,11 @@ input[type=file]{display:none}
 
     <!-- SAVE -->
     <div class="sb">
-      <div class="sb-hd">Output → test.xml</div>
+      <div class="sb-hd">Output → <span id="outputFilename">XML file</span></div>
       <p class="save-note">
-        Load <code>test.xml</code> via the picker — the page holds a write handle. <b>Save Override</b> overwrites it in place instantly. <b>Clear</b> restores the original feed.
+        Load an XML file via the picker — the page holds a write handle. <b>Save Override</b> overwrites it in place instantly. <b>Clear</b> restores the original feed.
       </p>
-      <button class="btn b-gold" id="saveBtn" onclick="doSave()" disabled style="width:100%;margin-bottom:5px">▶ Save Override → test.xml</button>
+      <button class="btn b-gold" id="saveBtn" onclick="doSave()" disabled style="width:100%;margin-bottom:5px">▶ Save Override</button>
       <div class="btn-row">
         <button class="btn b-red" id="clearBtn" onclick="doClear()" disabled>✕ Clear &amp; Restore</button>
         <button class="btn b-ghost" id="dlBtn" onclick="doDL()" disabled style="flex:0 0 auto;padding:6px 9px">↓</button>
@@ -390,6 +395,7 @@ input[type=file]{display:none}
       <div class="th" id="thGuest">
         <div class="th-colorbar" id="cbGuest"></div>
         <div class="th-inner">
+          <img class="th-logo" id="logoGuest" src="" alt="" style="display:none">
           <div class="th-id" id="gId">VIS</div>
           <div class="th-meta">
             <div class="th-name" id="gName">Visitor</div>
@@ -410,6 +416,7 @@ input[type=file]{display:none}
       <div class="th" id="thHome">
         <div class="th-colorbar" id="cbHome"></div>
         <div class="th-inner">
+          <img class="th-logo" id="logoHome" src="" alt="" style="display:none">
           <div class="th-id" id="hId">HOME</div>
           <div class="th-meta">
             <div class="th-name" id="hName">Home</div>
@@ -450,7 +457,7 @@ input[type=file]{display:none}
         <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" opacity="0.2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
-        Load test.xml to display lineups
+        Load an XML file to display lineups
       </div>
     </div>
 
@@ -610,11 +617,96 @@ async function resolveTeamColor(vh, xmlName) {
   matchEl.className = 'color-match-status matched';
 }
 
-// ── STATE ─────────────────────────────────────────────────────────────────
+// ── ESPN LOGO LOOKUP ───────────────────────────────────────────────────────
+// Uses the men's college basketball teams endpoint — most complete and stable.
+// Logo CDN is sport-agnostic: https://a.espncdn.com/i/teamlogos/ncaa/500/{id}.png
+
+const ESPN_TEAMS_URL = 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams?limit=1000';
+const ESPN_LOGO_BASE = 'https://a.espncdn.com/i/teamlogos/ncaa/500/';
+
+let espnTeamMap = null;      // name (uppercase) → ESPN team id, populated on first use
+let espnFetchPromise = null; // dedupe concurrent fetches
+
+async function getEspnTeamMap() {
+  if (espnTeamMap) return espnTeamMap;
+  if (espnFetchPromise) return espnFetchPromise;
+  espnFetchPromise = (async () => {
+    try {
+      const resp = await fetch(ESPN_TEAMS_URL);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      const map = {};
+      const teams = data?.sports?.[0]?.leagues?.[0]?.teams || data?.teams || [];
+      for (const entry of teams) {
+        const t = entry.team || entry;
+        if (!t.id) continue;
+        // Index by displayName, shortDisplayName, abbreviation, nickname — all uppercase
+        for (const key of [t.displayName, t.shortDisplayName, t.abbreviation, t.nickname, t.location]) {
+          if (key) map[key.toUpperCase().trim()] = t.id;
+        }
+      }
+      espnTeamMap = map;
+      return map;
+    } catch(e) {
+      console.warn('ESPN team fetch failed:', e.message);
+      espnTeamMap = {};
+      return {};
+    }
+  })();
+  return espnFetchPromise;
+}
+
+// Fuzzy-match an XML team name to an ESPN team ID using the same word-overlap
+// logic we use for the color catalog, but against the live ESPN name map.
+async function resolveEspnId(xmlName) {
+  const map = await getEspnTeamMap();
+  if (!map || !Object.keys(map).length) return null;
+
+  const q = xmlName.toUpperCase().trim();
+
+  // 1. Exact key match
+  if (map[q]) return map[q];
+
+  // 2. Starts-with in either direction
+  for (const key of Object.keys(map)) {
+    if (key.startsWith(q + ' ') || q.startsWith(key + ' ')) return map[key];
+  }
+
+  // 3. Word-overlap scoring (strip common words)
+  const qNorm = normalizeForMatch(xmlName);
+  const qWords = qNorm.split(' ').filter(Boolean);
+  let bestId = null, bestScore = 0;
+  for (const [key, id] of Object.entries(map)) {
+    const kNorm = normalizeForMatch(key);
+    const kWords = kNorm.split(' ').filter(Boolean);
+    const overlap = qWords.filter(w => kWords.includes(w)).length;
+    const score = overlap / Math.max(qWords.length, kWords.length);
+    if (score > bestScore) { bestScore = score; bestId = id; }
+  }
+  return bestScore >= 0.5 ? bestId : null;
+}
+
+async function resolveTeamLogo(vh, xmlName) {
+  const logoId = vh === 'V' ? 'logoGuest' : 'logoHome';
+  const logoEl = document.getElementById(logoId);
+  if (!logoEl) return;
+
+  const espnId = await resolveEspnId(xmlName);
+  if (!espnId) { logoEl.style.display = 'none'; return; }
+
+  const url = `${ESPN_LOGO_BASE}${espnId}.png`;
+  logoEl.onload  = () => { logoEl.style.display = ''; };
+  logoEl.onerror = () => { logoEl.style.display = 'none'; };
+  logoEl.src = url;
+  logoEl.alt = xmlName;
+}
 let rawXML = '', fileHandle = null, game = null;
 let detectedBatter = null, overridePick = null;
 let guestColor = '#4a8fd4', homeColor = '#25a85a';
 let autoTimer = null;
+let activeFileName = 'XML file'; // updated when file is loaded
+
+function getFileName() { return activeFileName; }
 
 // ── IFRAME DETECT ─────────────────────────────────────────────────────────
 if (window.self !== window.top) {
@@ -633,7 +725,9 @@ async function doLoad() {
       multiple:false
     });
     fileHandle = h;
+    activeFileName = h.name;
     document.getElementById('pathInput').value = h.name;
+    document.getElementById('outputFilename').textContent = h.name;
     document.getElementById('reloadBtn').disabled = false;
     document.getElementById('clearBtn').disabled = false;
     document.getElementById('dlBtn').disabled = false;
@@ -664,7 +758,9 @@ function doPaste() {
   const v = document.getElementById('pasteBox').value.trim();
   if (!v) { toast('Nothing to parse','err'); return; }
   rawXML = v; fileHandle = null;
-  document.getElementById('pathInput').value = 'pasted';
+  activeFileName = 'pasted XML';
+  document.getElementById('pathInput').value = 'pasted XML';
+  document.getElementById('outputFilename').textContent = 'pasted XML';
   document.getElementById('pasteWrap').style.display = 'none';
   overridePick = null;
   parseAndRender();
@@ -805,13 +901,21 @@ function render() {
   else if(g.battingVH==='H'){hb.textContent='▶ BATTING';hb.className='batting-badge up';gb.textContent='FIELDING';gb.className='batting-badge dn';}
   else{gb.textContent='—';gb.className='batting-badge dn';hb.textContent='—';hb.className='batting-badge dn';}
 
-  // Attempt color resolution (only on first render or if name changed)
+  // Attempt color + logo resolution (only when team name changes)
   const gName=g.visitor?.name||'', hName=g.home?.name||'';
-  if(gName!==lastGuestName){lastGuestName=gName;resolveTeamColor('V',gName);}
-  if(hName!==lastHomeName){lastHomeName=hName;resolveTeamColor('H',hName);}
+  if(gName!==lastGuestName){
+    lastGuestName=gName;
+    resolveTeamColor('V',gName);
+    resolveTeamLogo('V',gName);
+  }
+  if(hName!==lastHomeName){
+    lastHomeName=hName;
+    resolveTeamColor('H',hName);
+    resolveTeamLogo('H',hName);
+  }
 
   // Status bar
-  document.getElementById('sfFile').textContent=fileHandle?fileHandle.name:'pasted';
+  document.getElementById('sfFile').textContent = activeFileName;
   document.getElementById('sfInn').textContent=g.inn;
   document.getElementById('sfOuts').textContent=g.outs;
   document.getElementById('sfBS').textContent=g.balls!==''?`${g.balls}-${g.strikes}`:'—';
@@ -984,7 +1088,7 @@ function buildModXML(){
 
 // ── WRITE ─────────────────────────────────────────────────────────────────
 async function writeToHandle(content){
-  if(!fileHandle){triggerDL(content,'test.xml');return false;}
+  if(!fileHandle){triggerDL(content, activeFileName !== 'pasted XML' ? activeFileName : 'output.xml');return false;}
   let perm=await fileHandle.queryPermission({mode:'readwrite'});
   if(perm!=='granted') perm=await fileHandle.requestPermission({mode:'readwrite'});
   if(perm!=='granted'){toast('Write permission denied','err');return false;}
@@ -999,7 +1103,7 @@ async function doSave(){
   const xml=buildModXML();
   const wrote=await writeToHandle(xml);
   const t=ts();
-  if(wrote){document.getElementById('sfSaved').textContent=`Written ${t}`;toast(`test.xml overwritten · Daktronics sees #${overridePick.uni} ${overridePick.shortname}`,'ok');}
+  if(wrote){document.getElementById('sfSaved').textContent=`Written ${t}`;toast(`${activeFileName} overwritten · Daktronics sees #${overridePick.uni} ${overridePick.shortname}`,'ok');}
   else{document.getElementById('sfSaved').textContent=`Downloaded ${t}`;toast('No write handle — fell back to download','warn');}
 }
 
@@ -1009,13 +1113,14 @@ async function doClear(){
   if(!rawXML) return;
   const wrote=await writeToHandle(rawXML);
   const t=ts();
-  if(wrote){document.getElementById('sfSaved').textContent=`Restored ${t}`;toast('Override cleared · original test.xml restored','warn');}
+  if(wrote){document.getElementById('sfSaved').textContent=`Restored ${t}`;toast(`Override cleared · ${activeFileName} restored`,'warn');}
   else{document.getElementById('sfSaved').textContent=`Downloaded ${t}`;toast('Fell back to download','warn');}
 }
 
 function doDL(){
   const xml=overridePick?buildModXML():rawXML;
-  if(xml) triggerDL(xml,'test.xml');
+  const fname = activeFileName !== 'pasted XML' ? activeFileName : 'output.xml';
+  if(xml) triggerDL(xml, fname);
 }
 
 function triggerDL(content,fname){
